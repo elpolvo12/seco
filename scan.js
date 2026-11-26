@@ -396,7 +396,7 @@ function openImport(entries, text){
   openSheet('importSheet');
 }
 function renderImport(){
-  const catOpts = id => state.cats.map(c => `<option value="${c.id}" ${c.id === id ? 'selected' : ''}>${c.ico} ${esc(c.name)}</option>`).join('');
+  const catOpts = id => state.cats.map(c => `<option value="${c.id}" ${c.id === id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
   $('importList').innerHTML = importRows.map((r, i) => `
     <div class="imp ${r.on ? '' : 'off'}" data-i="${i}">
       <button class="check ${r.on ? 'on' : ''}" data-act="toggle" aria-label="Übernehmen"></button>

@@ -1,7 +1,7 @@
 // Version: bei jeder Änderung hier, in app.js (APP_VERSION) und in version.json erhöhen.
-const VERSION = '1.24';
+const VERSION = '1.25';
 const CACHE = 'seco-' + VERSION;
-const FILES = ['./','index.html','style.css','app.js','scan.js','manifest.webmanifest','icons/icon-180.png','icons/icon-512.png'];
+const FILES = ['./','index.html','style.css','app.js','scan.js','icons.js','manifest.webmanifest','icons/icon-180.png','icons/icon-512.png'];
 // Beim Installieren frisch vom Server holen (HTTP-Cache umgehen)
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, {cache: 'reload'})))));

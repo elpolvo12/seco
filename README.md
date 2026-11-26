@@ -29,3 +29,6 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 
 ## Neue Version veröffentlichen
 Versionsnummer an drei Stellen erhöhen: `APP_VERSION` in `app.js`, `VERSION` in `sw.js` und `version.json`. Die App zeigt dann beim nächsten Öffnen „Neue Version verfügbar – Aktualisieren“.
+
+## Icons
+Kategorie- und Oberflächen-Icons stammen aus dem [IBM Carbon Design System](https://github.com/carbon-design-system/carbon) (`@carbon/icons`, Apache-2.0, Lizenztext in `licenses/carbon-icons-LICENSE`). `icons.js` ist daraus erzeugt.

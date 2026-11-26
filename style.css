@@ -25,6 +25,7 @@ body{overscroll-behavior-y:none}
 :root[data-theme="dark"] .segmented button.on{background:#636366}
 button{font:inherit;color:inherit;cursor:pointer}
 svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+svg.ci{fill:currentColor;stroke:none}
 
 /* Views */
 .view{display:none;padding:env(safe-area-inset-top) 16px calc(100px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;animation:fade .25s var(--ease)}
@@ -254,3 +255,29 @@ body:has(.sheetWrap.open) .toast.show{transform:none}
 .lg.dash::before{border-top-style:dashed}
 .legend span.lg{display:inline-flex;align-items:center;gap:0}
 .legend span.lg::before{border-radius:0;height:0}
+
+/* Carbon-Icons */
+.ci{display:block;flex:none}
+.ci.inl{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.2em}
+.navbtn .ci{width:22px;height:22px;margin:auto}
+.ico{color:var(--c)}
+.ico .ci{width:20px;height:20px}
+.ico.big .ci{width:40px;height:40px}
+.cell .ico .ci{width:17px;height:17px}
+.chips button .ci{display:inline-block;width:17px;height:17px;vertical-align:-3px;margin-right:3px;color:var(--c)}
+.favBtn .ci{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:2px;color:var(--c)}
+.table .nm .ci{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:4px;color:var(--c)}
+.empty .big{display:block;margin-bottom:10px}
+.empty .big .ci{width:52px;height:52px;margin:0 auto;color:var(--sub);opacity:.55}
+.budgetText .ci{color:var(--warning)}
+.progress.over ~ .budgetText .ci{color:var(--critical)}
+.iconGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0 4px}
+.iconGrid button{aspect-ratio:1;border:2px solid transparent;border-radius:12px;background:var(--card);color:var(--sub);display:grid;place-items:center;padding:0;transition:background .15s,color .15s}
+.iconGrid button .ci{width:22px;height:22px}
+.iconGrid button.on{color:var(--c);border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--card))}
+.scanBtn .ci{width:22px;height:22px}
+.tab .ci{width:26px;height:26px}
+.addbtn .ci{width:30px;height:30px}
+.search .ci{width:18px;height:18px;color:var(--sub)}
+.keypad button .ci{width:24px;height:24px;margin:auto}
+.locBadge .ci{width:18px;height:18px;color:var(--accent)}

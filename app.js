@@ -10,16 +10,16 @@ const isDark = () => (state.theme || 'dark') === 'dark' || (state.theme === 'sys
 const color = slot => PALETTE[isDark() ? 'dark' : 'light'][slot] ?? PALETTE.light[8];
 
 const DEFAULT_CATS = [
-  {id:'food',     name:'Lebensmittel', ico:'🛒', c:5},
-  {id:'out',      name:'Restaurant',   ico:'🍽️', c:1},
-  {id:'transport',name:'Verkehr',      ico:'🚌', c:0},
-  {id:'home',     name:'Wohnen',       ico:'🏠', c:6},
-  {id:'fun',      name:'Freizeit',     ico:'🎬', c:4},
-  {id:'shop',     name:'Shopping',     ico:'🛍️', c:2},
-  {id:'health',   name:'Gesundheit',   ico:'💊', c:7},
-  {id:'other',    name:'Sonstiges',    ico:'📦', c:3},
+  {id:'food',     name:'Lebensmittel', ico:'cart',       c:5},
+  {id:'out',      name:'Restaurant',   ico:'restaurant', c:1},
+  {id:'transport',name:'Verkehr',      ico:'bus',        c:0},
+  {id:'home',     name:'Wohnen',       ico:'home',       c:6},
+  {id:'fun',      name:'Freizeit',     ico:'ticket',     c:4},
+  {id:'shop',     name:'Shopping',     ico:'bag',        c:2},
+  {id:'health',   name:'Gesundheit',   ico:'health',     c:7},
+  {id:'other',    name:'Sonstiges',    ico:'box',        c:3},
 ];
-const UNKNOWN = {id:'?', name:'Ohne Kategorie', ico:'❔', c:8};
+const UNKNOWN = {id:'?', name:'Ohne Kategorie', ico:'help', c:8};
 
 /* ---------- Speicher ---------- */
 const KEY = 'ausgaben.v2';
@@ -42,13 +42,19 @@ function roundAll(st){
   return st;
 }
 if (!state.wholeEuros){ roundAll(state); state.wholeEuros = true; save(); }
+// Emoji-Kategorien auf Carbon-Icons umstellen (auch für importierte Backups)
+function migrateIcons(st){
+  st.cats.forEach(c => { const k = EMOJI_TO_ICON[String(c.ico || '').replace(/\uFE0F/g, '')]; if (k) c.ico = k; });
+  return st;
+}
+migrateIcons(state); save();
 // Einmalig: Kategorie "Tanzen" anlegen und Bargeld dorthin
 if (!state.migDance){
   let t = state.cats.find(c => /^tanzen$/i.test(c.name));
   if (!t){
     const used = new Set(state.cats.map(c => c.c));
     const slot = [4, 6, 2, 0, 1, 3, 5, 7].find(i => !used.has(i)) ?? 4;
-    t = {id: 'dance', name: 'Tanzen', ico: '💃', c: slot};
+    t = {id: 'dance', name: 'Tanzen', ico: 'music', c: slot};
     state.cats.push(t);
   }
   state.items.forEach(i => { if (/^bargeld$/i.test((i.note || '').trim())) i.cat = t.id; });
@@ -106,13 +112,13 @@ function budgetStatus(total, budget, key){
   const now = new Date(), isCurrent = key === monthKey(now);
   const pct = total / budget;
   let text;
-  if (pct > 1) text = `⚠️ <b>${eur.format(total - budget)}</b> über Budget von ${eur0.format(budget)}`;
+  if (pct > 1) text = `${icon('warn','inl')} <b>${eur.format(total - budget)}</b> über Budget von ${eur0.format(budget)}`;
   else {
     const rest = budget - total;
     if (isCurrent){
       text = `Noch <b>${eur.format(rest)}</b> von ${eur0.format(budget)}`;
     } else text = `<b>${eur.format(rest)}</b> von ${eur0.format(budget)} übrig`;
-    if (pct >= .8) text = '⚠️ ' + text;
+    if (pct >= .8) text = icon('warn','inl') + ' ' + text;
   }
   return {pct, text, cls: pct > 1 ? 'over' : pct >= .8 ? 'warn' : ''};
 }
@@ -146,8 +152,8 @@ function renderHome(){
 
   if (!list.length){
     $('list').innerHTML = q
-      ? `<p class="empty"><span class="big">🔍</span>Keine Treffer für „${esc(q)}“.</p>`
-      : `<p class="empty"><span class="big">💸</span>Noch keine Ausgaben in diesem Monat.<br>Tippe auf <b>+</b>, um eine hinzuzufügen.</p>`;
+      ? `<p class="empty"><span class="big">${icon('search')}</span>Keine Treffer für „${esc(q)}“.</p>`
+      : `<p class="empty"><span class="big">${icon('wallet')}</span>Noch keine Ausgaben in diesem Monat.<br>Tippe auf <b>+</b>, um eine hinzuzufügen.</p>`;
     return;
   }
   const days = new Map();
@@ -159,7 +165,7 @@ function renderHome(){
     return `<div class="day"><span>${label}</span><span>${eur.format(sum(arr))}</span></div><div class="card group">` +
       arr.map(i => { const c = cat(i.cat); return `<div class="swipe" data-id="${i.id}">
         <button class="swipeDel" data-del="${i.id}">Löschen</button>
-        <div class="row"><span class="ico" style="--c:${color(c.c)}">${c.ico}</span>
+        <div class="row"><span class="ico" style="--c:${color(c.c)}">${icon(c.ico)}</span>
         <span class="meta"><b>${esc(i.note || c.name)}</b>${i.note ? `<small>${esc(c.name)}</small>` : ''}</span>
         <span class="amt">${eur.format(i.amount)}</span></div></div>`; }).join('') + '</div>';
   }).join('');
@@ -275,7 +281,7 @@ function renderAmount(){
 }
 function renderChips(){
   $('chips').innerHTML = state.cats.map(c =>
-    `<button data-id="${c.id}" class="${c.id===selCat?'on':''}" style="--c:${color(c.c)}">${c.ico} ${esc(c.name)}</button>`).join('');
+    `<button data-id="${c.id}" class="${c.id===selCat?'on':''}" style="--c:${color(c.c)}">${icon(c.ico)}${esc(c.name)}</button>`).join('');
   $('chips').querySelector('.on')?.scrollIntoView({inline:'center', block:'nearest'});
 }
 $('chips').onclick = e => { const b = e.target.closest('button'); if (b){ selCat = b.dataset.id; catTouched = true; renderChips(); renderSuggest(); } };
@@ -325,8 +331,8 @@ $('expSave').onclick = () => {
   $('search').value = '';
   render();
   const after = sum(ofMonth(key)), b = state.budget;
-  if (b && before <= b && after > b) toast(`⚠️ Monatsbudget überschritten (${eur.format(after - b)} drüber)`);
-  else if (b && before < .8*b && after >= .8*b) toast(`⚠️ 80 % des Budgets erreicht`);
+  if (b && before <= b && after > b) toast(`Monatsbudget überschritten (${eur.format(after - b)} drüber)`);
+  else if (b && before < .8*b && after >= .8*b) toast(`80 % des Budgets erreicht`);
   else if (editing && oldCat !== data.cat && data.note){
     const changed = applyCatToName(data.note, data.cat, editing);
     if (changed.length){ save(); render(); toastCatChange(data.note, data.cat, changed); }
@@ -421,7 +427,7 @@ function renderFavs(key, q){
   box.hidden = !favs.length;
   box.innerHTML = favs.length
     ? `<div class="favLabel"><span>Schnell erfassen</span><small>gedrückt halten = ausblenden</small></div><div class="favRow">` +
-      favs.map(f => `<button class="favBtn" data-fav="${encodeURIComponent(f.key)}">${cat(f.cat).ico} ${esc(f.note || cat(f.cat).name)} · <b>${eur.format(f.amt)}</b></button>`).join('') + '</div>'
+      favs.map(f => `<button class="favBtn" style="--c:${color(cat(f.cat).c)}" data-fav="${encodeURIComponent(f.key)}">${icon(cat(f.cat).ico)}${esc(f.note || cat(f.cat).name)} · <b>${eur.format(f.amt)}</b></button>`).join('') + '</div>'
     : '';
 }
 function quickAdd(key){
@@ -431,8 +437,8 @@ function quickAdd(key){
   state.items.push(item); save(); render();
   const after = before + f.amt, b = state.budget;
   let msg = `${f.note || cat(f.cat).name} ${eur.format(f.amt)} gespeichert`;
-  if (b && before <= b && after > b) msg = '⚠️ Monatsbudget überschritten';
-  else if (b && before < .8 * b && after >= .8 * b) msg = '⚠️ 80 % des Budgets erreicht';
+  if (b && before <= b && after > b) msg = 'Monatsbudget überschritten';
+  else if (b && before < .8 * b && after >= .8 * b) msg = '80 % des Budgets erreicht';
   toast(msg, 'Rückgängig', () => { state.items = state.items.filter(i => i.id !== item.id); save(); render(); });
 }
 function hideFav(key){
@@ -571,7 +577,7 @@ function renderDonut(){
   });
   $('donut').innerHTML = out;
   $('catTable').innerHTML = groups.length
-    ? groups.map(([id,v]) => `<div class="trow" style="--c:${color(cat(id).c)}"><span class="dot"></span><span class="nm">${cat(id).ico} ${esc(cat(id).name)}</span><span class="pc">${Math.round(v/total*100)} %</span><span class="vl">${eur.format(v)}</span></div>`).join('')
+    ? groups.map(([id,v]) => `<div class="trow" style="--c:${color(cat(id).c)}"><span class="dot"></span><span class="nm">${icon(cat(id).ico)}${esc(cat(id).name)}</span><span class="pc">${Math.round(v/total*100)} %</span><span class="vl">${eur.format(v)}</span></div>`).join('')
     : '<p class="empty" style="padding:10px">Keine Ausgaben in diesem Monat.</p>';
 }
 function renderKpis(){
@@ -602,7 +608,7 @@ function renderSettings(){
   $('placesCount').textContent = state.places.length;
   $('placesClear').disabled = !state.places.length;
   $('catList').innerHTML = state.cats.map(c => `<button class="cell action" data-cat="${c.id}">
-      <span class="left"><span class="ico" style="--c:${color(c.c)}">${c.ico}</span>${esc(c.name)}</span><span class="chev">›</span></button>`).join('')
+      <span class="left"><span class="ico" style="--c:${color(c.c)}">${icon(c.ico)}</span>${esc(c.name)}</span><span class="chev">›</span></button>`).join('')
     + `<button class="cell action add" data-cat="">＋ Kategorie hinzufügen</button>`;
 }
 $('budgetInput').onfocus = e => { e.target.value = state.budget ? String(state.budget) : ''; };
@@ -613,13 +619,13 @@ $('budgetInput').onblur = e => {
 };
 $('budgetInput').onkeydown = e => { if (e.key === 'Enter') e.target.blur(); };
 
-let editCat = null, catSlot = 0;
+let editCat = null, catSlot = 0, catIco = 'tag';
 $('catList').onclick = e => { const b = e.target.closest('[data-cat]'); if (b) openCat(state.cats.find(c => c.id === b.dataset.cat)); };
 function openCat(c){
   editCat = c || null;
   $('catTitle').textContent = c ? 'Kategorie bearbeiten' : 'Neue Kategorie';
   $('catName').value = c ? c.name : '';
-  $('catEmoji').value = c ? c.ico : '';
+  catIco = c ? c.ico : 'tag';
   catSlot = c ? c.c : state.cats.length % 8;
   $('catDelete').hidden = !c || state.cats.length <= 1;
   renderCatPreview();
@@ -627,15 +633,16 @@ function openCat(c){
 }
 function renderCatPreview(){
   $('catPrevIco').style.setProperty('--c', color(catSlot));
-  $('catPrevIco').textContent = $('catEmoji').value.trim() || '🏷️';
+  $('catPrevIco').innerHTML = icon(catIco);
+  $('iconGrid').innerHTML = ICON_PICKER.map(k => `<button data-k="${k}" class="${k===catIco?'on':''}" style="--c:${color(catSlot)}" aria-label="${k}">${icon(k)}</button>`).join('');
   $('swatches').innerHTML = PALETTE.light.map((_, i) => `<button data-s="${i}" class="${i===catSlot?'on':''}" style="--c:${color(i)}" aria-label="Farbe ${i+1}"></button>`).join('');
 }
-$('catEmoji').oninput = renderCatPreview;
+$('iconGrid').onclick = e => { const b = e.target.closest('button'); if (b){ catIco = b.dataset.k; renderCatPreview(); } };
 $('swatches').onclick = e => { const b = e.target.closest('button'); if (b){ catSlot = +b.dataset.s; renderCatPreview(); } };
 $('catSave').onclick = () => {
   const name = $('catName').value.trim();
   if (!name){ $('catName').focus(); return; }
-  const data = {name, ico: $('catEmoji').value.trim() || '🏷️', c: catSlot};
+  const data = {name, ico: catIco, c: catSlot};
   if (editCat) Object.assign(editCat, data);
   else state.cats.push({id: 'c' + Date.now().toString(36), ...data});
   save(); closeSheet('catSheet'); render();
@@ -675,7 +682,7 @@ $('importFile').onchange = async e => {
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
     state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : [], favs: d.favs, favHidden: Array.isArray(d.favHidden) ? d.favHidden : []};
-    roundAll(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
+    roundAll(state); migrateIcons(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
@@ -717,7 +724,7 @@ async function placeName(lat, lon, accuracy){
 }
 function setLocBadge(state){
   const b = $('locBadge');
-  b.textContent = state === 'busy' ? '📍' : '';
+  b.innerHTML = state === 'busy' ? icon('location') : '';
   b.classList.toggle('spin', state === 'busy');
   $('note').classList.toggle('loading', state === 'busy');
 }
@@ -849,7 +856,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.24';
+const APP_VERSION = '1.25';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
