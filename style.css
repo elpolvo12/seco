@@ -14,7 +14,7 @@
   --sep:rgba(60,60,67,.29);
   --fill:rgba(120,120,128,.2); --fill2:rgba(120,120,128,.16); --fill3:rgba(120,120,128,.12);
   /* System-Tint */
-  --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#fa8c6c;
+  --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#ff2d78;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
   --scrim:rgba(0,0,0,.3);
