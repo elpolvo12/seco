@@ -171,7 +171,9 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .25s var(--ease)}
 .switch:checked{background:var(--good)}
 .switch:checked::after{transform:translateX(20px)}
-.repeatRow{display:flex;justify-content:center;min-height:0;margin:-6px 0 10px}
-.repeatHint{border:0;border-radius:16px;padding:6px 12px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-size:15px;font-weight:500;animation:fade .25s var(--ease)}
-.repeatHint[hidden]{display:none}
+.suggest{display:flex;justify-content:center;gap:8px;margin:-6px 0 12px}
+.suggest[hidden]{display:none}
+.suggest button{border:0;border-radius:16px;padding:7px 16px;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;animation:fade .25s var(--ease)}
+.suggest button.top{background:var(--accent);color:#fff}
+.keypad button.fn{font-size:20px;color:var(--sub)}
 .cell:disabled{opacity:.4}

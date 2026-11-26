@@ -82,7 +82,7 @@
   <div class="card group">
     <label class="cell">
       <span>Monatsbudget</span>
-      <input id="budgetInput" type="text" inputmode="decimal" placeholder="Kein Budget" autocomplete="off">
+      <input id="budgetInput" type="text" placeholder="Kein Budget" autocomplete="off" inputmode="numeric">
     </label>
   </div>
   <p class="footnote">Du wirst bei 80 % und beim Überschreiten gewarnt.</p>
@@ -97,7 +97,7 @@
     <button class="cell action danger" id="homeClear" hidden>Zuhause entfernen</button>
     <button class="cell action" id="placesClear"><span>Bekannte Orte vergessen</span><span class="chev" id="placesCount">0</span></button>
   </div>
-  <p class="footnote">Bei einer neuen Ausgabe wird der Ort (z. B. Geschäft oder Straße) automatisch als Notiz eingetragen – aber nur, wenn du mehr als 300 m von zuhause entfernt bist. An Orten, an denen du schon etwas gespeichert hast, werden Notiz und Kategorie vom letzten Mal übernommen und der letzte Betrag vorgeschlagen. Zur Ortssuche wird dein Standort an OpenStreetMap gesendet.</p>
+  <p class="footnote">Bei einer neuen Ausgabe wird der Ort (z. B. Geschäft oder Straße) automatisch als Notiz eingetragen – aber nur, wenn du mehr als 300 m von zuhause entfernt bist. An Orten, an denen du schon etwas gespeichert hast, werden Notiz und Kategorie vom letzten Mal übernommen und passende Beträge vorgeschlagen. Zur Ortssuche wird dein Standort an OpenStreetMap gesendet.</p>
 
   <h3 class="sectionTitle">Kategorien</h3>
   <div class="card group" id="catList"></div>
@@ -139,7 +139,7 @@
       <button class="linkbtn strong" id="expSave">Sichern</button>
     </div>
     <div class="amountDisplay" id="amountDisplay"></div>
-    <div class="repeatRow"><button class="repeatHint" id="repeatHint" hidden></button></div>
+    <div class="suggest" id="suggest" hidden></div>
     <div class="chips" id="chips"></div>
     <div class="fields">
       <div class="noteWrap"><input id="note" type="text" placeholder="Notiz" autocomplete="off" enterkeyhint="done"><span class="locBadge" id="locBadge"></span></div>
@@ -149,7 +149,7 @@
       <button>1</button><button>2</button><button>3</button>
       <button>4</button><button>5</button><button>6</button>
       <button>7</button><button>8</button><button>9</button>
-      <button>,</button><button>0</button><button data-k="del" aria-label="Löschen">⌫</button>
+      <button data-k="clr" class="fn" aria-label="Betrag löschen">C</button><button>0</button><button data-k="del" aria-label="Löschen">⌫</button>
     </div>
     <button class="deleteBtn" id="expDelete" hidden>Ausgabe löschen</button>
   </div>

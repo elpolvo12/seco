@@ -33,12 +33,20 @@ function load(){
   return {items, cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: []};
 }
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+// Ganze Euro: bestehende Beträge einmalig kaufmännisch runden
+function roundAll(st){
+  st.items.forEach(i => i.amount = Math.round(i.amount));
+  st.budget = Math.round(st.budget || 0);
+  (st.places || []).forEach(p => { if (p.amount) p.amount = Math.round(p.amount); (p.amounts || []).forEach(x => x.a = Math.round(x.a)); });
+  return st;
+}
+if (!state.wholeEuros){ roundAll(state); state.wholeEuros = true; save(); }
 
 /* ---------- Helfer ---------- */
 const $ = id => document.getElementById(id);
 const $$ = sel => document.querySelectorAll(sel);
-const eur = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
-const eur0 = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const eur = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const eur0 = eur;
 const pad = n => String(n).padStart(2,'0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const monthKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
@@ -46,7 +54,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>'
 const cat = id => state.cats.find(c => c.id === id) || UNKNOWN;
 const sum = arr => arr.reduce((s,i) => s + i.amount, 0);
 const ofMonth = key => state.items.filter(i => i.date.startsWith(key));
-const parseNum = s => { const n = parseFloat(String(s).trim().replace(/[€\s]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.')); return isFinite(n) ? Math.round(n*100)/100 : NaN; };
+const parseNum = s => { const n = parseFloat(String(s).trim().replace(/[€\s]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.')); return isFinite(n) ? Math.round(n) : NaN; };
 
 let view = new Date(); view.setDate(1);
 let tab = 'home';
@@ -193,25 +201,23 @@ $$('[data-close]').forEach(el => el.onclick = () => closeSheet(el.closest('.shee
 $('add').onclick = () => openExpense();
 function openExpense(item){
   editing = item || null;
-  sheetSession++; here = null; catTouched = false; repeatAmount = null; setRepeatHint(null);
+  sheetSession++; here = null; catTouched = false; knownPlace = null;
   $('expTitle').textContent = item ? 'Bearbeiten' : 'Neue Ausgabe';
-  amountStr = item ? item.amount.toFixed(2).replace('.',',').replace(/,00$/,'') : '';
+  amountStr = item ? String(Math.round(item.amount)) : '';
   $('note').value = item ? item.note : '';
   const d = new Date(); const inView = monthKey(view) === monthKey(d);
   $('date').value = item ? item.date : inView ? iso(d) : iso(new Date(view.getFullYear(), view.getMonth()+1, 0));
   if (item) selCat = item.cat;
   else if (!state.cats.some(c => c.id === selCat)) selCat = state.cats[0]?.id;
   $('expDelete').hidden = !item;
-  renderAmount(); renderChips();
+  renderAmount(); renderChips(); renderSuggest();
   setLocBadge('');
   openSheet('expenseSheet');
   if (!item && state.loc) fillLocation();
 }
 function renderAmount(){
-  const [int, dec] = amountStr.split(',');
-  const intFmt = int ? Number(int).toLocaleString('de-DE') : '0';
   $('amountDisplay').innerHTML = amountStr
-    ? `${intFmt}${dec !== undefined ? ','+dec : ''} €`
+    ? `${Number(amountStr).toLocaleString('de-DE')} €`
     : '<span class="ph">0 €</span>';
 }
 function renderChips(){
@@ -219,18 +225,18 @@ function renderChips(){
     `<button data-id="${c.id}" class="${c.id===selCat?'on':''}" style="--c:${color(c.c)}">${c.ico} ${esc(c.name)}</button>`).join('');
   $('chips').querySelector('.on')?.scrollIntoView({inline:'center', block:'nearest'});
 }
-$('chips').onclick = e => { const b = e.target.closest('button'); if (b){ selCat = b.dataset.id; catTouched = true; renderChips(); } };
+$('chips').onclick = e => { const b = e.target.closest('button'); if (b){ selCat = b.dataset.id; catTouched = true; renderChips(); renderSuggest(); } };
 $('keypad').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   const k = b.dataset.k || b.textContent;
   if (k === 'del') amountStr = amountStr.slice(0,-1);
-  else if (k === ','){ if (!amountStr.includes(',')) amountStr = (amountStr || '0') + ','; }
+  else if (k === 'clr') amountStr = '';
   else {
-    const [int, dec] = amountStr.split(',');
-    if (dec !== undefined ? dec.length >= 2 : int.length >= 7) return;
-    amountStr = amountStr === '0' ? k : amountStr + k;
+    if (amountStr.length >= 7) return;
+    amountStr = (amountStr === '0' ? '' : amountStr) + k;
+    if (amountStr === '0') amountStr = '';
   }
-  renderAmount(); setRepeatHint(amountStr ? null : repeatAmount);
+  renderAmount(); renderSuggest();
   const el = $('amountDisplay'); el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 100);
 };
 $('expSave').onclick = () => {
@@ -326,7 +332,7 @@ function renderKpis(){
 /* ---------- Einstellungen ---------- */
 function renderSettings(){
   if (document.activeElement !== $('budgetInput'))
-    $('budgetInput').value = state.budget ? state.budget.toLocaleString('de-DE',{minimumFractionDigits:2}) + ' €' : '';
+    $('budgetInput').value = state.budget ? state.budget.toLocaleString('de-DE') + ' €' : '';
   $('locToggle').checked = !!state.loc;
   $('homeLabel').textContent = state.home ? 'Zuhause neu festlegen' : 'Aktuellen Standort als Zuhause festlegen';
   $('homeState').textContent = state.home ? '✓' : '›';
@@ -337,7 +343,7 @@ function renderSettings(){
       <span class="left"><span class="ico" style="--c:${color(c.c)}">${c.ico}</span>${esc(c.name)}</span><span class="chev">›</span></button>`).join('')
     + `<button class="cell action add" data-cat="">＋ Kategorie hinzufügen</button>`;
 }
-$('budgetInput').onfocus = e => { e.target.value = state.budget ? String(state.budget).replace('.',',') : ''; };
+$('budgetInput').onfocus = e => { e.target.value = state.budget ? String(state.budget) : ''; };
 $('budgetInput').onblur = e => {
   const n = parseNum(e.target.value);
   state.budget = n > 0 ? n : 0; save(); renderSettings();
@@ -395,7 +401,7 @@ $('backupExport').onclick = () => shareFile(`seco-backup-${iso(new Date())}.json
 $('csvExport').onclick = () => {
   const q = s => `"${String(s).replace(/"/g,'""')}"`;
   const rows = [['Datum','Kategorie','Betrag','Notiz'], ...state.items.slice().sort((a,b) => a.date.localeCompare(b.date))
-    .map(i => [i.date, cat(i.cat).name, i.amount.toFixed(2).replace('.',','), i.note])];
+    .map(i => [i.date, cat(i.cat).name, Math.round(i.amount), i.note])];
   shareFile(`seco-${iso(new Date())}.csv`, 'text/csv', '﻿' + rows.map(r => r.map(q).join(';')).join('\n'));
 };
 $('backupImport').onclick = () => $('importFile').click();
@@ -406,14 +412,14 @@ $('importFile').onchange = async e => {
     const items = Array.isArray(d) ? d : d.items;
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
-    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: +d.budget || 0, loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : []};
-    save(); render(); toast('Backup wiederhergestellt');
+    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : []};
+    roundAll(state); state.wholeEuros = true; save(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
   if (!confirm('Wirklich alle Ausgaben, Kategorien und das Budget löschen?')) return;
   const old = state;
-  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: []};
+  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: [], wholeEuros: true};
   save(); render();
   toast('Alle Daten gelöscht', 'Rückgängig', () => { state = old; save(); render(); });
 };
@@ -470,7 +476,7 @@ async function fillLocation(){
     if (known){ // bekannter Ort: sofort übernehmen, ohne Internet
       if (stillValid()) $('note').value = known.name;
       if (!catTouched && state.cats.some(c => c.id === known.cat)){ selCat = known.cat; renderChips(); }
-      repeatAmount = known.amount; if (!amountStr) setRepeatHint(known.amount);
+      knownPlace = known; renderSuggest();
       return;
     }
     const name = await placeName(pos.lat, pos.lon, pos.acc);
@@ -483,7 +489,7 @@ async function fillLocation(){
 }
 
 /* Bekannte Orte: Name, Kategorie und Betrag vom letzten Mal */
-let sheetSession = 0, here = null, catTouched = false, repeatAmount = null;
+let sheetSession = 0, here = null, catTouched = false, knownPlace = null;
 const PLACE_RADIUS = 80; // Meter
 function findPlace(pos){
   const r = Math.max(PLACE_RADIUS, Math.min(pos.acc || 0, 150));
@@ -495,19 +501,40 @@ function rememberPlace(pos, data){
   if (!data.note) return;
   let pl = findPlace({...pos, acc: 0});
   if (!pl){ pl = {lat: pos.lat, lon: pos.lon, count: 0}; state.places.push(pl); }
-  Object.assign(pl, {name: data.note, cat: data.cat, amount: data.amount, t: Date.now(), count: (pl.count || 0) + 1});
+  const amounts = (pl.amounts || (pl.amount ? [{a: pl.amount, t: pl.t || Date.now()}] : [])).concat({a: data.amount, t: Date.now()}).slice(-30);
+  Object.assign(pl, {name: data.note, cat: data.cat, amount: data.amount, amounts, t: Date.now(), count: (pl.count || 0) + 1});
   if (state.places.length > 300) state.places.sort((a,b) => b.t - a.t).length = 300;
   save();
 }
-function setRepeatHint(amount){
-  const b = $('repeatHint');
-  b.hidden = !amount;
-  if (amount) b.textContent = `↺ Wie letztes Mal: ${eur.format(amount)}`;
+/* Betragsvorschläge: häufig + kürzlich (Halbwertszeit 45 Tage), erst Ort, dann Kategorie */
+function rankAmounts(list, now = Date.now()){
+  const score = new Map();
+  for (const {a, t} of list){
+    if (!(a > 0)) continue;
+    const w = Math.pow(0.5, (now - t) / (45 * 864e5));
+    if (w < 0.1) continue; // älter als ~5 Monate
+    score.set(a, (score.get(a) || 0) + w);
+  }
+  return [...score].sort((x, y) => y[1] - x[1]).map(([a]) => a);
 }
-$('repeatHint').onclick = () => {
-  if (!repeatAmount) return;
-  amountStr = repeatAmount.toFixed(2).replace('.',',').replace(/,00$/,'');
-  renderAmount(); $('repeatHint').hidden = true;
+function suggestions(){
+  const out = [];
+  const add = arr => { for (const a of arr){ if (out.length >= 3) break; if (!out.includes(a)) out.push(a); } };
+  if (knownPlace && knownPlace.cat === selCat) add(rankAmounts(knownPlace.amounts || [{a: knownPlace.amount, t: knownPlace.t}]));
+  const catItems = state.items.filter(i => i.cat === selCat)
+    .map(i => ({a: Math.round(i.amount), t: i.id > 1e12 ? i.id : new Date(i.date + 'T12:00').getTime()}));
+  add(rankAmounts(catItems));
+  return out;
+}
+function renderSuggest(){
+  const box = $('suggest');
+  const list = amountStr ? [] : suggestions();
+  box.innerHTML = list.map((a, i) => `<button data-a="${a}" class="${i === 0 && knownPlace && knownPlace.cat === selCat ? 'top' : ''}">${eur.format(a)}</button>`).join('');
+  box.hidden = !list.length;
+}
+$('suggest').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  amountStr = b.dataset.a; renderAmount(); renderSuggest();
 };
 $('note').addEventListener('input', () => { locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; });
 

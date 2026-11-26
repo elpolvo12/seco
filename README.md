@@ -12,8 +12,10 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 
 ## Funktionen
 - **Übersicht:** Monatssumme, Budget-Fortschritt (inkl. Tagesbudget), Verteilung nach Kategorien, Suche über alle Monate
+- **Ganze Euro:** keine Cent, alle Beträge werden kaufmännisch gerundet
+- **Betragsvorschläge:** bis zu 3 passende Beträge je nach Ort und Kategorie (häufig + kürzlich gewichtet)
 - **Erfassen:** eigener Ziffernblock, Kategorie, Notiz, Datum; Antippen zum Bearbeiten, nach links wischen zum Löschen (mit Rückgängig)
 - **Statistik:** letzte 6 Monate mit Budgetlinie, Ringdiagramm nach Kategorie, Kennzahlen (Ø/Tag, größte Ausgabe, Vergleich zum Vormonat)
 - **Einstellungen:** Monatsbudget mit Warnung bei 80 %/100 %, eigene Kategorien (Name, Emoji, Farbe), JSON-Backup & Wiederherstellung, CSV-Export
-- **Ort:** Wenn aktiviert und du nicht zuhause bist (> 300 m), wird der Ort (Geschäft/Straße, Stadt) automatisch in die Notiz übernommen (Ortssuche über OpenStreetMap). An bekannten Orten werden Notiz und Kategorie vom letzten Mal sofort übernommen und der letzte Betrag vorgeschlagen
+- **Ort:** Wenn aktiviert und du nicht zuhause bist (> 300 m), wird der Ort (Geschäft/Straße, Stadt) automatisch in die Notiz übernommen (Ortssuche über OpenStreetMap). An bekannten Orten werden Notiz und Kategorie vom letzten Mal sofort übernommen und passende Beträge vorgeschlagen
 - Hell-/Dunkelmodus, offline nutzbar, Daten bleiben lokal auf dem Gerät
