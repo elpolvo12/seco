@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ausgaben">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="style.css">
+<title>Ausgaben</title>
+</head>
+<body>
+<header>
+  <div class="monthnav">
+    <button id="prev" aria-label="Voriger Monat">‹</button>
+    <h1 id="month"></h1>
+    <button id="next" aria-label="Nächster Monat">›</button>
+  </div>
+  <div class="total" id="total"></div>
+  <div class="bar" id="bar"></div>
+  <div class="legend" id="legend"></div>
+</header>
+
+<main id="list"></main>
+
+<div class="actions">
+  <button id="export" class="ghost">CSV exportieren</button>
+</div>
+
+<button id="fab" aria-label="Ausgabe hinzufügen">+</button>
+
+<dialog id="sheet">
+  <form method="dialog" id="form">
+    <h2 id="sheetTitle">Neue Ausgabe</h2>
+    <input id="amount" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required>
+    <div class="cats" id="cats"></div>
+    <input id="note" type="text" placeholder="Notiz (optional)" autocomplete="off">
+    <input id="date" type="date" required>
+    <div class="row">
+      <button type="button" id="cancel" class="ghost">Abbrechen</button>
+      <button type="button" id="del" class="danger" hidden>Löschen</button>
+      <button type="submit" class="primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
