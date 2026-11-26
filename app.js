@@ -233,7 +233,10 @@ $('keypad').onclick = e => {
   if (k === 'del') amountStr = amountStr.slice(0,-1);
   else if (k === 'clr') amountStr = '';
   else {
-    if (amountStr.length >= 7) return;
+    if (Number(amountStr + k) > 1000){
+      const el = $('amountDisplay'); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+      toast('Ausgaben gehen nur bis 1000 €'); return;
+    }
     amountStr = (amountStr === '0' ? '' : amountStr) + k;
     if (amountStr === '0') amountStr = '';
   }

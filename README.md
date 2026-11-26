@@ -14,7 +14,8 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 - **Übersicht:** Monatssumme, Budget-Fortschritt (inkl. Tagesbudget), Verteilung nach Kategorien, Suche über alle Monate
 - **Ganze Euro:** keine Cent, alle Beträge werden kaufmännisch gerundet
 - **Betragsvorschläge:** bis zu 3 passende Beträge je nach Ort und Kategorie (häufig + kürzlich gewichtet)
-- **Beleg scannen:** Kamera-Taste im Eingabefenster – Betrag, Datum und Geschäft werden vom Kassenbon übernommen, Kategorie wird erraten (Texterkennung mit Tesseract direkt auf dem Gerät; beim ersten Mal ca. 10 MB Download)
+- **Beleg oder Screenshot scannen:** Kamera-Taste im Eingabefenster. Kassenbon → Betrag, Datum, Geschäft. Banking-Screenshot → alle Abbuchungen als Liste zum Prüfen (Gutschriften, Kontostand und bereits erfasste Ausgaben werden erkannt). Texterkennung mit Tesseract direkt auf dem Gerät
+- **Obergrenze:** Ausgaben gehen nur bis 1000 €; höhere Beträge werden beim Scannen ignoriert
 - **Erfassen:** eigener Ziffernblock, Kategorie, Notiz, Datum; Antippen zum Bearbeiten, nach links wischen zum Löschen (mit Rückgängig)
 - **Statistik:** letzte 6 Monate mit Budgetlinie, Ringdiagramm nach Kategorie, Kennzahlen (Ø/Tag, größte Ausgabe, Vergleich zum Vormonat)
 - **Einstellungen:** Monatsbudget mit Warnung bei 80 %/100 %, eigene Kategorien (Name, Emoji, Farbe), JSON-Backup & Wiederherstellung, CSV-Export
