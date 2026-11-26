@@ -103,6 +103,12 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .open .sheet{transform:none}
 .sheetHead{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:10px 0;background:var(--bg);z-index:1}
 .sheetHead b{font-weight:600}
+.amountRow{position:relative}
+.scanBtn{position:absolute;right:0;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:var(--card);color:var(--accent);display:grid;place-items:center}
+.scanBtn svg{width:24px;height:24px}
+.scanBtn.busy svg{animation:pulse 1s ease-in-out infinite}
+.amountDisplay .msg{font-size:19px;font-weight:500;display:inline-block;padding:20px 0}
+.amountRow .amountDisplay{padding-inline:48px}
 .amountDisplay{text-align:center;font-size:52px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums;padding:8px 0 12px;transition:transform .12s}
 .amountDisplay.bump{transform:scale(1.04)}
 .amountDisplay.shake{animation:shake .35s}
@@ -186,3 +192,6 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .suggest button.top{background:var(--accent);color:#fff}
 .keypad button.fn{font-size:20px;color:var(--sub)}
 .cell:disabled{opacity:.4}
+body:has(.sheetWrap.open) .toast{top:calc(12px + env(safe-area-inset-top));bottom:auto;transform:translateY(-20px)}
+body:has(.sheetWrap.open) .toast.show{transform:none}
+:root[data-theme="dark"] .toast{background:rgba(58,58,60,.97)}
