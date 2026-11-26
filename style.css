@@ -101,12 +101,16 @@ svg.ci{fill:currentColor;stroke:none}
 /* Karte: der Seco-Hologramm-Verlauf als Fläche, schraffiert; Logo klein oben rechts */
 @property --hp{syntax:'<number>';inherits:true;initial-value:0}
 .heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 16px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
-  background-color:#3b2f8f;
-  background-image:linear-gradient(105deg,#1a5f7c 0%,#3a2f90 22%,#8a2a6c 44%,#8c5a2e 62%,#1c6f5a 82%,#1a5f7c 100%);
-  background-size:230% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1%) 0;animation:holoFlow 12s ease-in-out infinite alternate}
+  background-color:#1b1740;
+  background-image:linear-gradient(135deg,#171538 0%,#221843 55%,#2b1740 100%);
+  animation:holoFlow 12s ease-in-out infinite alternate}
 @keyframes holoFlow{from{--hp:0}to{--hp:55}}
 /* Schraffur: feine Diagonallinien */
-.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.11) 0 1px,transparent 1px 5px)}
+/* Die Linien selbst sind die Hologramm-Folie: der Seco-Verlauf scheint nur durch die Schraffur */
+.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(105deg,#79e2ff 0%,#b79bff 20%,#ff97cf 40%,#ffd29a 58%,#9dffd2 78%,#79e2ff 100%);
+  background-size:230% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1%) 0;
+  -webkit-mask-image:repeating-linear-gradient(135deg,#000 0 1px,transparent 1px 6px);mask-image:repeating-linear-gradient(135deg,#000 0 1px,transparent 1px 6px)}
 .heroCard > *{position:relative;z-index:1}
 .hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
 .brand{display:inline-flex;align-items:center;gap:6px;color:var(--hc-fg)}
