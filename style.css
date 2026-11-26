@@ -223,3 +223,4 @@ body:has(.sheetWrap.open) .toast.show{transform:none}
 .impDate{position:relative}
 .impDate input{position:absolute;inset:0;opacity:0;width:100%}
 .impDate.guess{color:var(--warning);font-weight:600}
+.rawLink{display:block;margin:10px auto 0;font-size:15px}

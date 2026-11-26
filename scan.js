@@ -135,38 +135,46 @@ const BankParser = (() => {
   }
   const isNameLike = s => (s.match(/\p{L}/gu) || []).length >= 3;
 
-  // Live Text kopiert manchmal erst die ganze linke Spalte (Datum, Name), dann die rechte (Betrag, Kategorie)
-  function parseColumns(lines, today){
+  // Live Text kopiert die Spalten manchmal getrennt oder in gemischten Stücken.
+  // Dann: alle Namen in Lesereihenfolge (mit Datum davor) und alle Beträge in Lesereihenfolge
+  // (mit Kategorie danach) sammeln und der Reihe nach verbinden – wenn die Anzahl genau passt.
+  // loose = true: auch eine unbekannte Zeile direkt nach einem Betrag gilt als dessen Kategorie.
+  function parseSequence(lines, today, loose){
     const names = [], amts = [];
-    let curDate = null;
+    let curDate = null, prevWasAmount = false;
     for (const line of lines){
-      if (BALANCE.test(line)) continue;
+      if (BALANCE.test(line)){ prevWasAmount = false; continue; }
       const m = line.match(AMT);
       const d = dateOf(line, today);
       if (m){
         const own = cleanName(line.slice(0, m.index + m[1].length).replace(/(?<!\d)\d{1,2}\.\d{1,2}\.(\d{2,4})?/, ''));
-        if (isNameLike(own)) return null;                       // Name steht beim Betrag -> keine Spalten
+        if (isNameLike(own)) names.push({name: own, date: d || curDate});
         amts.push({sign: m[2] ? (m[2] === '+' ? '+' : '-') : '', amount: parseFloat(m[3].replace(/[.\s]/g, '') + '.' + m[4]), hasCurrency: !!m[5]});
+        prevWasAmount = true;
         continue;
       }
-      if (d){ curDate = d; continue; }
+      if (d){ curDate = d; prevWasAmount = false; continue; }
       const tc = line.match(TYPE_CAT);
       const n = tc ? tc[2].trim() : cleanName(line);
-      if (amts.length || tc || BANK_CAT_LINE.test(n)){            // rechte Spalte: Kategorie
-        const last = amts[amts.length - 1];
-        if (last && !last.bankCat && isNameLike(n)) last.bankCat = n;
+      const last = amts[amts.length - 1];
+      if (tc || BANK_CAT_LINE.test(n) || (loose && prevWasAmount && last && !last.bankCat)){
+        // Kategorie: zum nächstliegenden Betrag ohne Kategorie
+        const target = (prevWasAmount && last && !last.bankCat) ? last : amts.find(x => !x.bankCat) || last;
+        if (target && !target.bankCat && isNameLike(n)) target.bankCat = n;
+        prevWasAmount = false;
         continue;
       }
       if (isNameLike(n)) names.push({name: n, date: curDate});
+      prevWasAmount = false;
     }
     if (amts.length < 2 || names.length !== amts.length) return null;
-    return amts.map((a, i) => ({...a, name: names[i].name, date: names[i].date}));
+    return amts.map((x, i) => ({...x, name: names[i].name, date: names[i].date}));
   }
 
   function parse(text, today = new Date()){
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const raw = [];
-    let curDate = null, pendingName = '', dateHeaders = 0;
+    let curDate = null, pendingName = '', dateHeaders = 0, unused = 0;   // unused: Namen ohne Betrag
     let block = {names: [], nameless: []};             // Abschnitt zwischen Datumsüberschriften
     const closeBlock = () => {
       // Live Text kopiert manchmal erst alle Namen, dann alle Beträge: dann der Reihe nach zuordnen
@@ -179,7 +187,7 @@ const BankParser = (() => {
       const m = line.match(AMT);
       const d = dateOf(line, today);
       if (!m){
-        if (d){ closeBlock(); curDate = d; dateHeaders++; pendingName = ''; continue; }
+        if (d){ closeBlock(); if (pendingName) unused++; curDate = d; dateHeaders++; pendingName = ''; continue; }
         const tc = line.match(TYPE_CAT);
         const n = tc ? tc[2].trim() : cleanName(line);
         if (tc || BANK_CAT_LINE.test(n)){
@@ -187,7 +195,7 @@ const BankParser = (() => {
           if (last && !last.bankCat && isNameLike(n)) last.bankCat = n;
           continue;
         }
-        if (isNameLike(n)){ pendingName = n; block.names.push(n); }
+        if (isNameLike(n)){ if (pendingName) unused++; pendingName = n; block.names.push(n); }
         continue;
       }
       const sign = m[2] ? (m[2] === '+' ? '+' : '-') : '';
@@ -202,9 +210,10 @@ const BankParser = (() => {
     }
     closeBlock();
     // Fehlen Namen, aber passt die Spalten-Zuordnung genau, diese nehmen
-    if (raw.some(r => !r.name)){
-      const cols = parseColumns(lines, today);
-      if (cols) raw.splice(0, raw.length, ...cols);
+    if (pendingName) unused++;
+    if (raw.some(r => !r.name) || unused){
+      const seq = parseSequence(lines, today, false) || parseSequence(lines, today, true);
+      if (seq) raw.splice(0, raw.length, ...seq);
     }
     const firstDated = raw.find(r => r.date);
     raw.forEach(r => { if (!r.date && firstDated){ r.date = firstDated.date; r.dateGuess = true; } });
@@ -301,7 +310,7 @@ function applyText(text){
   if (!receipt.isReceipt && bank.looksLikeBank && bank.entries.length){
     renderAmount();
     closeSheet('expenseSheet');
-    openImport(bank.entries);
+    openImport(bank.entries, text);
     return;
   }
   if (receipt.amount) amountStr = String(Math.round(receipt.amount));
@@ -370,7 +379,9 @@ function completeNames(entries){
   });
   return entries;
 }
-function openImport(entries){
+let importText = '';
+function openImport(entries, text){
+  importText = text || '';
   completeNames(entries);
   importRows = entries.map(e => {
     const dup = isDuplicate(e);
@@ -398,6 +409,7 @@ function renderImport(){
   $('importSave').textContent = n ? `Hinzufügen (${n})` : 'Hinzufügen';
   $('importSave').disabled = !n;
   $('importInfo').textContent = `${importRows.length} Ausgabe${importRows.length === 1 ? '' : 'n'} erkannt · Gutschriften und Beträge über 1000 € werden ignoriert.`;
+  $('importRaw').hidden = !importText;
 }
 $('importList').onclick = e => {
   const b = e.target.closest('[data-act=toggle]'); if (!b) return;
@@ -426,4 +438,12 @@ $('importSave').onclick = () => {
   toast(`${rows.length} Ausgabe${rows.length === 1 ? '' : 'n'} hinzugefügt`, 'Rückgängig', () => {
     state.items = state.items.filter(i => !ids.has(i.id)); save(); render();
   });
+};
+
+/* Erkannten Text anzeigen (zum Prüfen / Weiterschicken) */
+$('importRaw').onclick = () => {
+  $('pasteArea').value = importText;
+  closeSheet('importSheet');
+  openSheet('pasteSheet');
+  toast('Erkannter Text – zum Kopieren gedrückt halten');
 };
