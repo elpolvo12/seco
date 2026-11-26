@@ -1,0 +1,1 @@
+{ "name": "spar-modus", "version": "0.1.0", "description": "Schont das Kontingent: einfache Fragen an das kleine Modell, richtige Arbeit ans große. Zeigt das Modell in der Statuszeile und in einem Seitenfeld.", "types": "./types/index.d.ts" }
