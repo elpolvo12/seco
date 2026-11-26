@@ -26,11 +26,11 @@ let state = load();
 function load(){
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && Array.isArray(s.items)) return {budget:0, cats:DEFAULT_CATS, loc:false, home:null, ...s};
+    if (s && Array.isArray(s.items)) return {budget:0, cats:DEFAULT_CATS, loc:false, home:null, places:[], ...s};
   } catch {}
   let items = [];
   try { items = JSON.parse(localStorage.getItem('ausgaben.v1')) || []; } catch {}
-  return {items, cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null};
+  return {items, cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: []};
 }
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
 
@@ -193,6 +193,7 @@ $$('[data-close]').forEach(el => el.onclick = () => closeSheet(el.closest('.shee
 $('add').onclick = () => openExpense();
 function openExpense(item){
   editing = item || null;
+  sheetSession++; here = null; catTouched = false; repeatAmount = null; setRepeatHint(null);
   $('expTitle').textContent = item ? 'Bearbeiten' : 'Neue Ausgabe';
   amountStr = item ? item.amount.toFixed(2).replace('.',',').replace(/,00$/,'') : '';
   $('note').value = item ? item.note : '';
@@ -218,7 +219,7 @@ function renderChips(){
     `<button data-id="${c.id}" class="${c.id===selCat?'on':''}" style="--c:${color(c.c)}">${c.ico} ${esc(c.name)}</button>`).join('');
   $('chips').querySelector('.on')?.scrollIntoView({inline:'center', block:'nearest'});
 }
-$('chips').onclick = e => { const b = e.target.closest('button'); if (b){ selCat = b.dataset.id; renderChips(); } };
+$('chips').onclick = e => { const b = e.target.closest('button'); if (b){ selCat = b.dataset.id; catTouched = true; renderChips(); } };
 $('keypad').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   const k = b.dataset.k || b.textContent;
@@ -229,7 +230,7 @@ $('keypad').onclick = e => {
     if (dec !== undefined ? dec.length >= 2 : int.length >= 7) return;
     amountStr = amountStr === '0' ? k : amountStr + k;
   }
-  renderAmount();
+  renderAmount(); setRepeatHint(amountStr ? null : repeatAmount);
   const el = $('amountDisplay'); el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 100);
 };
 $('expSave').onclick = () => {
@@ -239,7 +240,7 @@ $('expSave').onclick = () => {
   const key = data.date.slice(0,7);
   const before = sum(ofMonth(key));
   if (editing) Object.assign(editing, data);
-  else state.items.push({id: Date.now(), ...data});
+  else { state.items.push({id: Date.now(), ...data}); if (here) rememberPlace(here, data); }
   save();
   closeSheet('expenseSheet');
   const [y,m] = key.split('-').map(Number); view = new Date(y, m-1, 1);
@@ -330,6 +331,8 @@ function renderSettings(){
   $('homeLabel').textContent = state.home ? 'Zuhause neu festlegen' : 'Aktuellen Standort als Zuhause festlegen';
   $('homeState').textContent = state.home ? '✓' : '›';
   $('homeClear').hidden = !state.home;
+  $('placesCount').textContent = state.places.length;
+  $('placesClear').disabled = !state.places.length;
   $('catList').innerHTML = state.cats.map(c => `<button class="cell action" data-cat="${c.id}">
       <span class="left"><span class="ico" style="--c:${color(c.c)}">${c.ico}</span>${esc(c.name)}</span><span class="chev">›</span></button>`).join('')
     + `<button class="cell action add" data-cat="">＋ Kategorie hinzufügen</button>`;
@@ -403,14 +406,14 @@ $('importFile').onchange = async e => {
     const items = Array.isArray(d) ? d : d.items;
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
-    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: +d.budget || 0, loc: !!d.loc, home: d.home || null};
+    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: +d.budget || 0, loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : []};
     save(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
   if (!confirm('Wirklich alle Ausgaben, Kategorien und das Budget löschen?')) return;
   const old = state;
-  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null};
+  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: []};
   save(); render();
   toast('Alle Daten gelöscht', 'Rückgängig', () => { state = old; save(); render(); });
 };
@@ -452,15 +455,25 @@ function setLocBadge(state){
 }
 let locRun = 0;
 async function fillLocation(){
-  const run = ++locRun;
-  const stillValid = () => run === locRun && $('expenseSheet').classList.contains('open') && !editing && !$('note').value.trim();
+  const run = ++locRun, session = sheetSession;
+  const sheetOpen = () => session === sheetSession && $('expenseSheet').classList.contains('open') && !editing;
+  const stillValid = () => run === locRun && sheetOpen() && !$('note').value.trim();
   setLocBadge('busy');
   $('note').placeholder = 'Ort wird gesucht …';
   try {
     const p = await getPos({maximumAge: 5000});
-    const here = {lat: p.coords.latitude, lon: p.coords.longitude};
-    if (state.home && distance(here, state.home) <= HOME_RADIUS) return; // zuhause: nichts eintragen
-    const name = await placeName(here.lat, here.lon, p.coords.accuracy);
+    const pos = {lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy};
+    if (state.home && distance(pos, state.home) <= HOME_RADIUS) return; // zuhause: nichts eintragen
+    if (!sheetOpen()) return;
+    here = pos;
+    const known = findPlace(pos);
+    if (known){ // bekannter Ort: sofort übernehmen, ohne Internet
+      if (stillValid()) $('note').value = known.name;
+      if (!catTouched && state.cats.some(c => c.id === known.cat)){ selCat = known.cat; renderChips(); }
+      repeatAmount = known.amount; if (!amountStr) setRepeatHint(known.amount);
+      return;
+    }
+    const name = await placeName(pos.lat, pos.lon, pos.acc);
     if (name && stillValid()) $('note').value = name;
   } catch (e) {
     if (e && e.code === 1 && run === locRun) toast('Standortzugriff verweigert – in den iOS-Einstellungen erlauben');
@@ -468,6 +481,34 @@ async function fillLocation(){
     if (run === locRun){ setLocBadge(''); $('note').placeholder = 'Notiz'; }
   }
 }
+
+/* Bekannte Orte: Name, Kategorie und Betrag vom letzten Mal */
+let sheetSession = 0, here = null, catTouched = false, repeatAmount = null;
+const PLACE_RADIUS = 80; // Meter
+function findPlace(pos){
+  const r = Math.max(PLACE_RADIUS, Math.min(pos.acc || 0, 150));
+  let best = null, bestD = Infinity;
+  for (const pl of state.places){ const d = distance(pos, pl); if (d < r && d < bestD){ best = pl; bestD = d; } }
+  return best;
+}
+function rememberPlace(pos, data){
+  if (!data.note) return;
+  let pl = findPlace({...pos, acc: 0});
+  if (!pl){ pl = {lat: pos.lat, lon: pos.lon, count: 0}; state.places.push(pl); }
+  Object.assign(pl, {name: data.note, cat: data.cat, amount: data.amount, t: Date.now(), count: (pl.count || 0) + 1});
+  if (state.places.length > 300) state.places.sort((a,b) => b.t - a.t).length = 300;
+  save();
+}
+function setRepeatHint(amount){
+  const b = $('repeatHint');
+  b.hidden = !amount;
+  if (amount) b.textContent = `↺ Wie letztes Mal: ${eur.format(amount)}`;
+}
+$('repeatHint').onclick = () => {
+  if (!repeatAmount) return;
+  amountStr = repeatAmount.toFixed(2).replace('.',',').replace(/,00$/,'');
+  renderAmount(); $('repeatHint').hidden = true;
+};
 $('note').addEventListener('input', () => { locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; });
 
 $('locToggle').onchange = async e => {
@@ -485,6 +526,10 @@ $('homeSet').onclick = async () => {
     toast('Zuhause gespeichert');
   } catch (err) { toast(err.code === 1 ? 'Standortzugriff verweigert' : 'Standort nicht verfügbar'); }
   renderSettings();
+};
+$('placesClear').onclick = () => {
+  if (!state.places.length || !confirm(`${state.places.length} bekannte Orte vergessen?`)) return;
+  state.places = []; save(); renderSettings(); toast('Bekannte Orte gelöscht');
 };
 $('homeClear').onclick = () => { state.home = null; save(); renderSettings(); toast('Zuhause entfernt'); };
 
