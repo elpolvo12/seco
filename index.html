@@ -26,13 +26,25 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
   </header>
 
   <div class="heroCard" id="hero">
-    <div class="hcTop"><span id="hcMonth"></span><span id="hcDaily"></span></div>
-    <div class="hcNum" id="hcMain"></div>
-    <div class="hcSub" id="hcLabel"></div>
-    <div class="wk3" id="weekTiles"></div>
-    <div class="hcBar"><i id="hcBar"></i></div>
-    <div class="hcFoot"><span id="hcMonthTxt"></span><span class="fcPill" id="hcFc" hidden></span></div>
-    <button class="linkbtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
+    <div class="hcTop"><span id="hcDate"></span><span id="hcDaily"></span></div>
+    <div class="hcMain">
+      <div class="hcNum" id="hcMain"></div>
+      <div class="hcSub" id="hcLabel"></div>
+    </div>
+    <div>
+      <div class="hcBar"><i id="hcBar"></i></div>
+      <div class="hcCols">
+        <div><small id="c1l"></small><b id="c1v"></b><em id="c1s"></em></div>
+        <div><small id="c2l"></small><b id="c2v"></b><em id="c2s"></em></div>
+        <div><small id="c3l"></small><b id="c3v"></b><em id="c3s"></em></div>
+      </div>
+    </div>
+  </div>
+  <button class="linkbtn hintBtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
+
+  <div class="weekCard" id="weekCard">
+    <div class="wcHead"><span>Diese Woche</span><span id="wcSum"></span></div>
+    <div class="wk" id="weekTiles"></div>
   </div>
 
   <div id="saveSec"><div id="saveCard"></div></div>

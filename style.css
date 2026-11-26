@@ -17,6 +17,7 @@
   --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#ff2d78;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
+  --hc-bg:linear-gradient(150deg,#ffffff 0%,#eceef3 100%); --hc-fg:#111114; --hc-fg2:rgba(17,17,20,.55); --hc-line:rgba(17,17,20,.14); --hc-border:rgba(0,0,0,.06); --hc-shadow:0 10px 30px rgba(0,0,0,.10); --hc-ok:#1b8a3f; --hc-bad:#d63a30; --hc-sheen:rgba(255,255,255,.0);
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
@@ -36,6 +37,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
+  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:#34d058; --hc-bad:#ff6b61; --hc-sheen:rgba(255,255,255,.10);
   --scrim:rgba(0,0,0,.55);
 }
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{
@@ -46,6 +48,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
+  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:#34d058; --hc-bad:#ff6b61; --hc-sheen:rgba(255,255,255,.10);
   --scrim:rgba(0,0,0,.55);
 }}
 
@@ -91,33 +94,39 @@ svg.ci{fill:currentColor;stroke:none}
 .linkbtn:disabled{opacity:.4}
 
 /* ---------- Startseite: Summe ---------- */
-.heroCard{position:relative;overflow:hidden;color:#fff;border-radius:28px;padding:22px 20px 18px;margin-bottom:14px;background:linear-gradient(135deg,#0a84ff 0%,#5e5ce6 55%,#bf5af2 100%);box-shadow:0 14px 34px rgba(94,92,230,.32)}
-.heroCard::after{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.11);pointer-events:none}
+/* Karte im Kartenformat (ISO/IEC 7810 ID-1: 85,6 × 54 mm = 1,586 : 1) */
+.heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 16px;margin-bottom:14px;color:var(--hc-fg);background:var(--hc-bg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow)}
+.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 0% 0%,var(--hc-sheen),transparent 55%),repeating-linear-gradient(115deg,var(--hc-sheen) 0 1px,transparent 1px 8px);opacity:.55}
 .heroCard > *{position:relative;z-index:1}
-.hcTop{display:flex;justify-content:space-between;font-size:14px;opacity:.88}
-.hcNum{font-family:var(--font-num);font-size:76px;line-height:80px;font-weight:200;letter-spacing:-.035em;font-variant-numeric:tabular-nums;margin:12px 0 0}
-.hcSub{font-size:16px;opacity:.88;margin:0 0 18px}
-.wk3{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.wk3[hidden]{display:none}
-.wk3 div{background:rgba(255,255,255,.16);border-radius:14px;padding:8px 0 9px;text-align:center}
-.wk3 small{display:block;font-size:11px;line-height:14px;opacity:.85}
-.wk3 b{display:block;font-family:var(--font-num);font-size:16px;line-height:23px;font-weight:400;font-variant-numeric:tabular-nums}
-.wk3 .ok{background:rgba(48,209,88,.5)}
-.wk3 .hi{background:rgba(255,69,58,.62)}
-.wk3 .today{box-shadow:inset 0 0 0 2px #fff}
-.wk3 .fut{opacity:.45}
-.hcBar{height:7px;border-radius:4px;background:rgba(255,255,255,.28);margin:18px 0 10px;overflow:hidden}
-.hcBar[hidden]{display:none}
-.hcBar i{display:block;height:100%;border-radius:4px;background:#fff;transition:width .5s var(--ease),background .3s}
-.hcBar i.warn{background:#ffb340}
-.hcBar i.over{background:#ff453a}
-.hcFoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;font-weight:400}
-.fcPill{border-radius:999px;padding:5px 12px;font-size:13px;font-weight:400;white-space:nowrap;background:rgba(255,255,255,.2)}
-.fcPill[hidden]{display:none}
-.fcPill.good{background:#30d158;color:#04230e}
-.fcPill.bad{background:#ff453a;color:#fff}
-.heroCard .linkbtn{color:#fff;padding:12px 0 0;display:block;text-decoration:underline}
-.heroCard .linkbtn[hidden]{display:none}
+.hcTop{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
+.hcNum{font-family:var(--font-num);font-size:64px;line-height:66px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcSub{font-size:14px;font-weight:400;color:var(--hc-fg2);margin-top:1px}
+.hcBar{height:3px;border-radius:2px;background:var(--hc-line);margin:0 0 11px;overflow:hidden}
+.hcBar i{display:block;height:100%;border-radius:2px;background:var(--hc-fg);transition:width .5s var(--ease),background .3s}
+.hcBar i.warn{background:var(--orange)}
+.hcBar i.over{background:var(--red)}
+.hcCols{display:grid;grid-template-columns:repeat(3,1fr)}
+.hcCols > div{min-width:0;padding:0 11px;border-left:.5px solid var(--hc-line)}
+.hcCols > div:first-child{padding-left:0;border-left:0}
+.hcCols small{display:block;font-size:11px;line-height:14px;font-weight:400;color:var(--hc-fg2)}
+.hcCols b{display:block;font-family:var(--font-num);font-size:17px;line-height:22px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcCols em{display:block;font-style:normal;font-size:11px;line-height:14px;font-weight:400;color:var(--hc-fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcCols .good{color:var(--hc-ok)}
+.hcCols .bad{color:var(--hc-bad)}
+.hintBtn{display:block;margin:-6px 0 8px;padding:6px 4px;font-size:15px}
+.hintBtn[hidden]{display:none}
+
+/* Woche: eigene Karte, nur Überschreitungen sind farbig */
+.weekCard{background:var(--card);border-radius:var(--r-card);padding:14px 14px 12px;margin-bottom:14px}
+.weekCard[hidden]{display:none}
+.wcHead{display:flex;justify-content:space-between;font-size:13px;font-weight:400;color:var(--sub);margin:0 4px 10px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wk div{background:var(--fill3);border-radius:12px;padding:7px 0 8px;text-align:center}
+.wk small{display:block;font-size:11px;line-height:14px;font-weight:400;color:var(--sub)}
+.wk b{display:block;font-family:var(--font-num);font-size:16px;line-height:22px;font-weight:300;font-variant-numeric:tabular-nums}
+.wk .hi{background:color-mix(in srgb,var(--red) 22%,transparent)}
+.wk .today{box-shadow:inset 0 0 0 1.5px var(--label)}
+.wk .fut{opacity:.4}
 
 /* Kategorie-Stapel */
 .stack{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden}
@@ -318,7 +327,7 @@ button.tile:active{background:var(--fill2)}
 /* Tagesgeld */
 .saveCard{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:24px;padding:16px 18px;margin-bottom:14px;color:var(--label)}
 .scTop{display:flex;align-items:center;gap:12px}
-.saveCard .ico{width:36px;height:36px}
+.saveCard .ico{width:36px;height:36px;color:var(--label2)}
 .saveCard .ico .ci{width:32px;height:32px}
 .saveCard small{display:block;font-size:13px;color:var(--sub)}
 .saveCard b{display:block;font-family:var(--font-num);font-size:28px;line-height:32px;font-weight:300;font-variant-numeric:tabular-nums}
@@ -328,7 +337,6 @@ button.tile:active{background:var(--fill2)}
 .scBtn:active{opacity:.4}
 .scChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .scChips span{font-size:13px;background:var(--fill3);border-radius:999px;padding:5px 11px;font-family:var(--font-num);font-weight:400}
-.scChips .pos{background:color-mix(in srgb,var(--green) 20%,transparent)}
 .scChips .neg{background:color-mix(in srgb,var(--red) 20%,transparent)}
 .saveAmount{text-align:center;font-family:var(--font-num);font-size:44px!important;font-weight:300;padding:14px!important}
 .tgRow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--sep)}
@@ -379,7 +387,6 @@ body:has(.sheetWrap.open) .toast.show{transform:none}
 /* ---------- Leichte Schrift ---------- */
 b,strong{font-weight:500}
 /* kleine Texte bleiben Regular, damit sie lesbar sind */
-.sectionTitle,.footnote,.day,.tile small,.tile > span,.legend,.favLabel,.importInfo,.impMeta,.calHead span,.dayTile i,.saveCard small,.saveCard .hint,.tab,.hcTop,.hcSub,.wk3 small,.hcFoot,.donutCenter small,.dayDetail span,.sublabel,.calLegend{font-weight:400}
+.sectionTitle,.footnote,.day,.tile small,.tile > span,.legend,.favLabel,.importInfo,.impMeta,.calHead span,.dayTile i,.saveCard small,.saveCard .hint,.tab,.donutCenter small,.dayDetail span,.sublabel,.calLegend{font-weight:400}
 .cell,.meta b,.row,.linkbtn,.chips button,.favBtn,.suggest button,.segmented button{font-weight:300}
 .linkbtn.strong,.fcPill,.sheetHead b{font-weight:500}
-.hcNum{font-weight:200}

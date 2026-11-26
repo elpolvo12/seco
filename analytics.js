@@ -58,12 +58,12 @@ const toTransfer = (s, key) => Math.max(0, s.month.saved - transferredIn(key));
 
 /* Eine Karte: Gespart im Monat groß, Heute/Woche als Chips, Tagesgeld als Link */
 function saveCardHTML(s, key){
-  if (!s) return `<button class="saveCard wide" data-go="budget"><span class="ico" style="--c:var(--green)">${icon('piggy')}</span><div class="grow"><small>Gespart</small><b>–</b><span class="hint">Lege ein Budget fest, dann siehst du hier, was du sparst.</span></div></button>`;
+  if (!s) return `<button class="saveCard wide" data-go="budget"><span class="ico">${icon('piggy')}</span><div class="grow"><small>Gespart</small><b>–</b><span class="hint">Lege ein Budget fest, dann siehst du hier, was du sparst.</span></div></button>`;
   const m = s.month, open = s.isCur ? toTransfer(s, key) : 0, done = transferredIn(key);
   const chip = (label, r) => `<span class="${r.saved > 0 ? 'pos' : r.saved < 0 ? 'neg' : ''}">${label} ${sgn(r.saved)}${money(r.saved)}</span>`;
   const chips = (s.isCur ? chip('Heute', s.day) + chip('Woche', s.week) : '') + (done ? `<span>Überwiesen ${eur.format(done)}</span>` : '');
   return `<div class="saveCard">
-    <div class="scTop"><span class="ico" style="--c:var(--green)">${icon('piggy')}</span>
+    <div class="scTop"><span class="ico">${icon('piggy')}</span>
       <div class="grow"><small>Gespart im Monat</small><b>${sgn(m.saved)}${money(m.saved)}</b></div>
       ${s.isCur ? `<button class="scBtn" id="tgBtn">Ins Tagesgeld ›</button>` : ''}</div>
     ${chips ? `<div class="scChips">${chips}</div>` : ''}
@@ -80,6 +80,13 @@ function weekTilesHTML(now = new Date()){
     const cls = future ? 'fut' : (!base || d < start) ? '' : amt > daily ? 'hi' : amt > 0 ? 'ok' : '';
     return `<div class="${cls}${ds === todayStr ? ' today' : ''}"><small>${WD[i]}</small><b>${future ? '–' : Math.round(amt)}</b></div>`;
   }).join('');
+}
+
+function weekSpent(now = new Date()){
+  const totals = dayTotals(), monday = addDays(now, -((now.getDay() + 6) % 7));
+  let sum = 0;
+  for (let i = 0; i < 7; i++) sum += (totals.get(iso(addDays(monday, i))) || {sum: 0}).sum;
+  return Math.round(sum);
 }
 
 /* ---------- Kategorien-Kacheln ---------- */

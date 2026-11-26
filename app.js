@@ -433,13 +433,13 @@ function todayLeft(now = new Date()){
   return {left: Math.round(allowance - spentToday), allowance: Math.round(allowance), exhausted: target - before <= 0, byBudget: !!state.budget};
 }
 
-/* Hero: Karte mit „heute noch“, Wochen-Kacheln, Monatsbalken und Prognose (grün im Budget, rot darüber) */
+/* Hero: Karte im Kartenformat – „heute noch“, Monatsbalken, drei Kennzahlen (Monat · Restzeit · Prognose) */
 function renderHero(key, total){
   const now = new Date(), isCur = key === monthKey(now);
   const f = forecast(key, now), t = isCur ? todayLeft(now) : null;
   const target = state.budget || f.histAvg || 0, byBudget = !!state.budget;
-  const ms = monthDate(key);
-  $('hcMonth').textContent = isCur ? now.toLocaleDateString('de-DE', {weekday: 'short', day: 'numeric', month: 'short'}) : ms.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'});
+  const ms = monthDate(key), dim = daysIn(ms.getFullYear(), ms.getMonth() + 1);
+  $('hcDate').textContent = isCur ? now.toLocaleDateString('de-DE', {weekday: 'short', day: 'numeric', month: 'long'}) : ms.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'});
   $('hcDaily').textContent = t && !t.exhausted ? `${byBudget ? 'Tagesbudget' : 'Richtwert'} ${eur.format(t.allowance)}` : '';
   // Hauptzahl
   let main, label;
@@ -449,25 +449,31 @@ function renderHero(key, total){
     else { main = eur.format(t.left); label = 'heute noch'; }
   } else { main = eur.format(total); label = 'ausgegeben'; }
   $('hcMain').textContent = main; $('hcLabel').textContent = label;
-  // Wochen-Kacheln nur im aktuellen Monat
-  $('weekTiles').hidden = !isCur;
-  if (isCur) $('weekTiles').innerHTML = weekTilesHTML(now);
-  // Monatsbalken: weiß < 80 %, orange bis 100 %, rot darüber
-  const pct = target ? total / target : 0;
-  const bar = $('hcBar');
-  bar.parentElement.hidden = !target;
+  // Monatsbalken: neutral, erst ab 80 % orange, über 100 % rot
+  const pct = target ? total / target : 0, bar = $('hcBar');
+  bar.parentElement.style.visibility = target ? 'visible' : 'hidden';
   bar.style.width = Math.min(100, pct * 100) + '%';
   bar.className = pct > 1 ? 'over' : pct >= .8 ? 'warn' : '';
-  $('hcMonthTxt').textContent = target ? `${eur.format(total)} ${byBudget ? 'von' : '· Ø'} ${eur.format(target)}` : `${eur.format(total)} ausgegeben`;
-  // Prognose-Pille: grün im Budget, rot darüber (Symbol + Text)
-  const fc = $('hcFc'), showFc = isCur && f.projected != null;
-  fc.hidden = !showFc;
-  if (showFc){
-    const over = target && f.projected > target;
-    fc.className = 'fcPill ' + (!target ? '' : over ? 'bad' : 'good');
-    fc.textContent = `Prognose ${eur.format(f.projected)} ${!target ? '' : over ? '▲' : '✓'}`.trim();
+  // Kennzahlen
+  const set = (n, l, v, sub, cls = '') => { $(`c${n}l`).textContent = l; $(`c${n}v`).textContent = v; $(`c${n}s`).textContent = sub; $(`c${n}v`).className = cls; $(`c${n}s`).className = cls; };
+  set(1, isCur ? 'Monat' : 'Gesamt', eur.format(total), target ? (byBudget ? `von ${eur.format(target)}` : `Ø ${eur.format(target)}`) : 'ausgegeben');
+  if (isCur){
+    const left = dim - now.getDate();
+    set(2, 'Noch', left > 0 ? `${left} ${left === 1 ? 'Tag' : 'Tage'}` : 'Letzter Tag', `Ø ${eur.format(total / now.getDate())} pro Tag`);
+    if (f.projected == null) set(3, 'Prognose', '–', 'zu früh');
+    else if (!target) set(3, 'Prognose', eur.format(f.projected), 'Monatsende');
+    else if (f.projected > target) set(3, 'Prognose', eur.format(f.projected), `▲ ${eur.format(f.projected - target)} drüber`, 'bad');
+    else set(3, 'Prognose', eur.format(f.projected), '✓ im Budget', 'good');
+  } else {
+    set(2, 'Ø pro Tag', eur.format(total / dim), 'im Monat');
+    if (!target) set(3, 'Budget', '–', 'nicht gesetzt');
+    else if (total > target) set(3, 'Über Budget', eur.format(total - target), `Budget ${eur.format(target)}`, 'bad');
+    else set(3, 'Unter Budget', eur.format(target - total), `Budget ${eur.format(target)}`, 'good');
   }
   $('setBudgetHint').hidden = !!state.budget;
+  // Woche: eigene Karte unter der Karte (nur aktueller Monat)
+  $('weekCard').hidden = !isCur;
+  if (isCur){ $('weekTiles').innerHTML = weekTilesHTML(now); $('wcSum').textContent = `${eur.format(weekSpent(now))} ausgegeben`; }
 }
 
 /* Favoriten: häufigste Ausgaben (Name + Betrag), jüngere zählen mehr */
@@ -854,7 +860,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.35';
+const APP_VERSION = '1.36';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
