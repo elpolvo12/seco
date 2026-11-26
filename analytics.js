@@ -70,6 +70,18 @@ function saveCardHTML(s, key){
   </div>`;
 }
 
+/* Wochen-Kacheln (Mo–So): Betrag pro Tag; grün im Tagesbudget, rot darüber, heute mit Rahmen */
+function weekTilesHTML(now = new Date()){
+  const base = savingBase(), totals = dayTotals(), start = parseD(firstDate());
+  const monday = addDays(now, -((now.getDay() + 6) % 7)), todayStr = iso(now);
+  return Array.from({length: 7}, (_, i) => {
+    const d = addDays(monday, i), ds = iso(d), e = totals.get(ds), amt = e ? e.sum : 0, future = ds > todayStr;
+    const daily = base ? base.target / daysIn(d.getFullYear(), d.getMonth() + 1) : null;
+    const cls = future ? 'fut' : (!base || d < start) ? '' : amt > daily ? 'hi' : amt > 0 ? 'ok' : '';
+    return `<div class="${cls}${ds === todayStr ? ' today' : ''}"><small>${WD[i]}</small><b>${future ? '–' : Math.round(amt)}</b></div>`;
+  }).join('');
+}
+
 /* ---------- Kategorien-Kacheln ---------- */
 function catTilesHTML(key, withDelta){
   const month = ofMonth(key), total = sum(month);

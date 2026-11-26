@@ -433,48 +433,39 @@ function todayLeft(now = new Date()){
   return {left: Math.round(allowance - spentToday), allowance: Math.round(allowance), exhausted: target - before <= 0, byBudget: !!state.budget};
 }
 
-/* Hero: Ring (Anteil des Monatsbudgets) mit „heute noch“ in der Mitte, rechts Monat · Tagesbudget · Prognose */
+/* Hero: Karte mit „heute noch“, Wochen-Kacheln, Monatsbalken und Prognose (grün im Budget, rot darüber) */
 function renderHero(key, total){
   const now = new Date(), isCur = key === monthKey(now);
   const f = forecast(key, now), t = isCur ? todayLeft(now) : null;
-  const target = state.budget || f.histAvg || 0;
-  const byBudget = !!state.budget;
-  const C = 2 * Math.PI * 52;
-  // Ring: Anteil von Budget bzw. Richtwert; grün < 80 %, orange bis 100 %, rot darüber
-  const pct = target ? total / target : 0;
-  const ringCls = !target ? '' : pct > 1 ? 'over' : pct >= .8 ? 'warn' : 'ok';
-  const fg = $('ringFg');
-  fg.setAttribute('class', 'ringFg ' + ringCls);
-  fg.style.strokeDasharray = `${target ? Math.max(pct > 0 ? 0.5 : 0, Math.min(1, pct) * C) : 0} ${C}`;
-  // Mitte
+  const target = state.budget || f.histAvg || 0, byBudget = !!state.budget;
+  const ms = monthDate(key);
+  $('hcMonth').textContent = isCur ? now.toLocaleDateString('de-DE', {weekday: 'short', day: 'numeric', month: 'short'}) : ms.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'});
+  $('hcDaily').textContent = t && !t.exhausted ? `${byBudget ? 'Tagesbudget' : 'Richtwert'} ${eur.format(t.allowance)}` : '';
+  // Hauptzahl
   let main, label;
   if (t){
-    if (t.exhausted){ main = byBudget ? '0 €' : eur.format(total); label = byBudget ? 'aufgebraucht' : 'über Ø'; }
+    if (t.exhausted){ main = byBudget ? '0 €' : eur.format(total); label = byBudget ? 'Budget aufgebraucht' : 'über dem Üblichen'; }
     else if (t.left < 0){ main = '−' + eur.format(-t.left); label = 'über Tagesbudget'; }
     else { main = eur.format(t.left); label = 'heute noch'; }
   } else { main = eur.format(total); label = 'ausgegeben'; }
-  $('ringMain').textContent = main;
-  $('ringMain').className = t && (t.exhausted || t.left < 0) ? 'bad' : '';
-  $('ringLabel').textContent = label;
-  // Seite: Monat
-  $('sideMonthLabel').textContent = isCur ? 'Monat' : 'Gesamt';
-  $('sideMonth').textContent = target ? `${eur.format(total)} ${byBudget ? 'von' : '· Ø'} ${eur.format(target)}` : eur.format(total);
-  // Tagesbudget
-  $('sideDailyRow').hidden = !t || t.exhausted;
-  if (t && !t.exhausted){
-    $('sideDailyLabel').textContent = byBudget ? 'Tagesbudget' : 'Tagesbudget (Richtwert)';
-    $('sideDaily').textContent = eur.format(t.allowance);
-  }
-  // Prognose: grün im Budget, rot darüber (Symbol + Text, nicht nur Farbe)
-  const showFc = isCur && f.projected != null;
-  $('sideForecastRow').hidden = !showFc;
+  $('hcMain').textContent = main; $('hcLabel').textContent = label;
+  // Wochen-Kacheln nur im aktuellen Monat
+  $('weekTiles').hidden = !isCur;
+  if (isCur) $('weekTiles').innerHTML = weekTilesHTML(now);
+  // Monatsbalken: weiß < 80 %, orange bis 100 %, rot darüber
+  const pct = target ? total / target : 0;
+  const bar = $('hcBar');
+  bar.parentElement.hidden = !target;
+  bar.style.width = Math.min(100, pct * 100) + '%';
+  bar.className = pct > 1 ? 'over' : pct >= .8 ? 'warn' : '';
+  $('hcMonthTxt').textContent = target ? `${eur.format(total)} ${byBudget ? 'von' : '· Ø'} ${eur.format(target)}` : `${eur.format(total)} ausgegeben`;
+  // Prognose-Pille: grün im Budget, rot darüber (Symbol + Text)
+  const fc = $('hcFc'), showFc = isCur && f.projected != null;
+  fc.hidden = !showFc;
   if (showFc){
     const over = target && f.projected > target;
-    const el = $('sideForecast');
-    el.textContent = `${eur.format(f.projected)} ${!target ? '' : over ? '▲' : '✓'}`.trim();
-    el.className = !target ? '' : over ? 'bad' : 'good';
-    $('sideForecastNote').textContent = !target ? '' : over ? `${eur.format(f.projected - target)} über ${byBudget ? 'Budget' : 'Ø'}` : (byBudget ? 'im Budget' : 'unter Ø');
-    $('sideForecastNote').className = !target ? '' : over ? 'bad' : 'good';
+    fc.className = 'fcPill ' + (!target ? '' : over ? 'bad' : 'good');
+    fc.textContent = `Prognose ${eur.format(f.projected)} ${!target ? '' : over ? '▲' : '✓'}`.trim();
   }
   $('setBudgetHint').hidden = !!state.budget;
 }
@@ -863,7 +854,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.34';
+const APP_VERSION = '1.35';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
