@@ -17,7 +17,7 @@
   --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#ff2d78;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
-  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#1b8a3f; --neg:#d63a30;
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
@@ -38,7 +38,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }
@@ -50,7 +50,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }}
@@ -100,7 +100,7 @@ svg.ci{fill:currentColor;stroke:none}
 /* Karte im Kartenformat (ISO/IEC 7810 ID-1: 85,6 × 54 mm = 1,586 : 1) */
 /* Karte: der Seco-Hologramm-Verlauf als Fläche; Logo oben rechts */
 @property --hp{syntax:'<number>';inherits:true;initial-value:0}
-.heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 16px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
+.heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:16px 22px 16px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
   background-color:#3a2f9a;
   background-image:linear-gradient(115deg,#1f7391 0%,#3d33a3 24%,#9b2f82 48%,#a2693a 68%,#1f836a 86%,#1f7391 100%);
   background-size:240% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1%) 0;animation:holoFlow 12s ease-in-out infinite alternate}
@@ -108,25 +108,25 @@ svg.ci{fill:currentColor;stroke:none}
 /* Schraffur: feine Diagonallinien */
 
 .heroCard > *{position:relative;z-index:1}
-.hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
+.hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:24px;font-size:14px;font-weight:500;color:var(--hc-fg2)}
 .brand{display:inline-flex;align-items:center;color:var(--hc-fg)}
 .brand b{font-family:var(--font-num);font-size:24px;line-height:1;font-weight:700;letter-spacing:.005em;text-transform:lowercase;white-space:nowrap}
 /* o als holografischer Ring: derselbe Seco-Verlauf wie die Schraffur */
 .ringO{display:inline-block;width:.57em;height:.57em;border-radius:50%;margin-left:.025em;
   background-image:linear-gradient(135deg,#79e2ff,#b79bff 30%,#ff97cf 55%,#ffd29a 78%,#9dffd2);background-size:220% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1.4%) 0;
   -webkit-mask:radial-gradient(circle closest-side,transparent 54%,#000 56%);mask:radial-gradient(circle closest-side,transparent 54%,#000 56%)}
-.hcNum{font-family:var(--font-num);font-size:64px;line-height:66px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
-.hcSub{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:400;color:var(--hc-fg2);margin-top:1px}
-.hcBar{height:3px;border-radius:2px;background:var(--hc-line);margin:0 0 11px;overflow:hidden}
+.hcNum{font-family:var(--font-num);font-size:56px;line-height:58px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcSub{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:500;color:var(--hc-fg2);margin-top:2px}
+.hcBar{height:4px;border-radius:2px;background:var(--hc-line);margin:0 0 11px;overflow:hidden}
 .hcBar i{display:block;height:100%;border-radius:2px;background:var(--hc-fg);transition:width .5s var(--ease),background .3s}
 .hcBar i.warn{background:var(--hc-warn)}
 .hcBar i.over{background:var(--hc-bad)}
 .hcCols{display:grid;grid-template-columns:repeat(3,1fr)}
-.hcCols > div{min-width:0;padding:0 11px;border-left:.5px solid var(--hc-line)}
+.hcCols > div{min-width:0;padding:0 12px;border-left:.5px solid var(--hc-line)}
 .hcCols > div:first-child{padding-left:0;border-left:0}
-.hcCols small{display:block;font-size:11px;line-height:14px;font-weight:400;color:var(--hc-fg2)}
-.hcCols b{display:block;font-family:var(--font-num);font-size:17px;line-height:22px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap}
-.hcCols em{display:block;font-style:normal;font-size:11px;line-height:14px;font-weight:400;color:var(--hc-fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hcCols small{display:block;font-size:12px;line-height:15px;font-weight:500;color:var(--hc-fg2)}
+.hcCols b{display:block;font-family:var(--font-num);font-size:17px;line-height:22px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcCols em{display:block;font-style:normal;font-size:12px;line-height:15px;font-weight:500;color:var(--hc-fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hcCols .good{color:var(--hc-ok)}
 .hcCols .bad{color:var(--hc-bad)}
 .hintBtn{display:block;margin:-6px 0 8px;padding:6px 4px;font-size:15px}
