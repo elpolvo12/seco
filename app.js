@@ -85,11 +85,22 @@ const sum = arr => arr.reduce((s,i) => s + i.amount, 0);
 const ofMonth = key => state.items.filter(i => i.date.startsWith(key));
 const parseNum = s => { const n = parseFloat(String(s).trim().replace(/[€\s]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.')); return isFinite(n) ? Math.round(n) : NaN; };
 
+/* Haptik: ein unsichtbarer iOS-Schalter wird per Klick umgeschaltet (iOS 18+). Wirkt nur nach einer Berührung. */
+const hapticLabel = (() => {
+  const l = document.createElement('label');
+  l.setAttribute('aria-hidden', 'true');
+  l.style.cssText = 'position:fixed;left:-200px;top:-200px;width:1px;height:1px;opacity:0;pointer-events:none';
+  l.innerHTML = '<input type="checkbox" switch tabindex="-1">';
+  document.body.appendChild(l);
+  return l;
+})();
+const haptic = () => { try { hapticLabel.click(); } catch {} };
+
 let view = new Date(); view.setDate(1);
 let tab = 'home';
 
 /* ---------- Tabs & Monat ---------- */
-$$('.tab').forEach(b => b.onclick = () => showTab(b.dataset.view));
+$$('.tab').forEach(b => b.onclick = () => { if (b.dataset.view !== tab) haptic(); showTab(b.dataset.view); });
 function showTab(name){
   tab = name;
   $$('.tab').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -105,7 +116,15 @@ function render(){
   if (tab === 'home') renderHome();
   if (tab === 'stats') renderStats();
   if (tab === 'settings') renderSettings();
+  syncCompactBar();
 }
+/* Kompakte Titelleiste: erscheint, sobald der große Titel nach oben wegscrollt */
+function syncCompactBar(){
+  const t = document.querySelector('.view.active .largeTitle');
+  $('compactTitle').textContent = t ? t.textContent : '';
+  $('compactBar').classList.toggle('show', scrollY > 48);
+}
+addEventListener('scroll', () => $('compactBar').classList.toggle('show', scrollY > 48), {passive: true});
 
 /* ---------- Übersicht ---------- */
 function budgetStatus(total, budget, key){
@@ -245,7 +264,7 @@ document.addEventListener('pointerdown', e => { if (openRow && !e.target.closest
 function removeItem(id){
   const idx = state.items.findIndex(i => i.id === id); if (idx < 0) return;
   const [item] = state.items.splice(idx, 1);
-  openRow = null; save(); render();
+  openRow = null; save(); render(); haptic();
   toast('Ausgabe gelöscht', 'Rückgängig', () => { state.items.push(item); save(); render(); });
 }
 
@@ -255,8 +274,31 @@ let editing = null, amountStr = '', selCat = DEFAULT_CATS[0].id;
 function openSheet(id){ $(id).classList.add('open'); }
 function closeSheet(id){ $(id).classList.remove('open'); document.activeElement?.blur(); }
 $$('[data-close]').forEach(el => el.onclick = () => closeSheet(el.closest('.sheetWrap').id));
+$$('.sheet').forEach(sh => {
+  const head = sh.querySelector('.sheetHead');
+  let d = null;
+  head.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    d = {y: e.clientY, t: Date.now(), dy: 0};
+    try { head.setPointerCapture(e.pointerId); } catch {}
+    sh.style.transition = 'none';
+  });
+  head.addEventListener('pointermove', e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y);
+    sh.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const {dy, t} = d; d = null;
+    sh.style.transition = ''; sh.style.transform = '';
+    if (dy > 110 || (dy > 40 && Date.now() - t < 250)) closeSheet(sh.closest('.sheetWrap').id);
+  };
+  head.addEventListener('pointerup', end);
+  head.addEventListener('pointercancel', end);
+});
 
-$('add').onclick = () => openExpense();
+$('add').onclick = () => { haptic(); openExpense(); };
 function openExpense(item){
   editing = item || null;
   sheetSession++; here = null; catTouched = false; knownPlace = null;
@@ -325,7 +367,7 @@ $('expSave').onclick = () => {
   const oldCat = editing ? editing.cat : null;
   if (editing) Object.assign(editing, data);
   else { state.items.push({id: Date.now(), ...data}); if (here) rememberPlace(here, data); }
-  save();
+  save(); haptic();
   closeSheet('expenseSheet');
   const [y,m] = key.split('-').map(Number); view = new Date(y, m-1, 1);
   $('search').value = '';
@@ -434,7 +476,7 @@ function quickAdd(key){
   const f = computeFavorites().find(x => x.key === key); if (!f) return;
   const today = iso(new Date()), mk = today.slice(0, 7), before = sum(ofMonth(mk));
   const item = {id: Date.now(), amount: f.amt, cat: f.cat, note: f.note, date: today};
-  state.items.push(item); save(); render();
+  state.items.push(item); save(); render(); haptic();
   const after = before + f.amt, b = state.budget;
   let msg = `${f.note || cat(f.cat).name} ${eur.format(f.amt)} gespeichert`;
   if (b && before <= b && after > b) msg = 'Monatsbudget überschritten';
@@ -856,7 +898,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.25';
+const APP_VERSION = '1.26';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
