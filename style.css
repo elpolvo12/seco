@@ -17,7 +17,8 @@
   --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#ff2d78;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
-  --hc-bg:linear-gradient(150deg,#ffffff 0%,#eceef3 100%); --hc-fg:#111114; --hc-fg2:rgba(17,17,20,.55); --hc-line:rgba(17,17,20,.14); --hc-border:rgba(0,0,0,.06); --hc-shadow:0 10px 30px rgba(0,0,0,.10); --hc-ok:#1b8a3f; --hc-bad:#d63a30; --hc-sheen:rgba(255,255,255,.0);
+  --hc-bg:linear-gradient(150deg,#ffffff 0%,#eceef3 100%); --hc-fg:#111114; --hc-fg2:rgba(17,17,20,.55); --hc-line:rgba(17,17,20,.14); --hc-border:rgba(0,0,0,.06); --hc-shadow:0 10px 30px rgba(0,0,0,.10); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.0);
+  --pos:#1b8a3f; --neg:#d63a30;
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
@@ -37,7 +38,8 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:#34d058; --hc-bad:#ff6b61; --hc-sheen:rgba(255,255,255,.10);
+  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.10);
+  --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{
@@ -48,7 +50,8 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:#34d058; --hc-bad:#ff6b61; --hc-sheen:rgba(255,255,255,.10);
+  --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.10);
+  --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }}
 
@@ -124,7 +127,8 @@ svg.ci{fill:currentColor;stroke:none}
 .wk div{background:var(--fill3);border-radius:12px;padding:7px 0 8px;text-align:center}
 .wk small{display:block;font-size:11px;line-height:14px;font-weight:400;color:var(--sub)}
 .wk b{display:block;font-family:var(--font-num);font-size:16px;line-height:22px;font-weight:300;font-variant-numeric:tabular-nums}
-.wk .hi{background:color-mix(in srgb,var(--red) 22%,transparent)}
+.wk .ok b{color:var(--pos)}
+.wk .hi b{color:var(--neg)}
 .wk .today{box-shadow:inset 0 0 0 1.5px var(--label)}
 .wk .fut{opacity:.4}
 
@@ -283,19 +287,20 @@ svg.ci{fill:currentColor;stroke:none}
 .tile > span{font-size:11px;line-height:14px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile.wide{grid-column:1/-1;min-height:0}
 button.tile:active{background:var(--fill2)}
-.tile.pos{background:color-mix(in srgb,var(--green) 16%,var(--card))}
-.tile.neg{background:color-mix(in srgb,var(--red) 16%,var(--card))}
-.tile.pos b::before{content:"";}
+.pos{color:var(--pos)}
+.neg{color:var(--neg)}
 /* Kategorie-Kachel */
-.catTile{background:color-mix(in srgb,var(--c) 14%,var(--card));padding-top:10px}
+.catTile{padding-top:10px}
 .catTile .ico.sm{width:26px;height:26px;margin:0 0 4px -2px;color:var(--c)}
 .catTile .ico.sm .ci{width:24px;height:24px}
 .catTile .pct{position:absolute;top:10px;right:10px;font-size:11px;color:var(--sub)}
 .catTile .dl{color:var(--label2)}
+.catTile .dl.pos,.tile > span.pos{color:var(--pos)}
+.catTile .dl.neg,.tile > span.neg{color:var(--neg)}
 /* Wochentage */
 .tile.wd{align-items:center;text-align:center;padding:8px 2px;min-height:0;gap:0}
 .tile.wd b{font-size:16px;line-height:22px}
-.tile.wd.hi{background:color-mix(in srgb,var(--heat) 30%,var(--card))}
+.tile.wd.hi{background:color-mix(in srgb,var(--heat) 18%,var(--card))}
 /* Monate */
 .monthTile.sel{box-shadow:inset 0 0 0 2px var(--blue)}
 .placeTile{border-left:4px solid var(--c)}
@@ -307,10 +312,10 @@ button.tile:active{background:var(--fill2)}
 .dayTile{position:relative;aspect-ratio:1;border:0;border-radius:9px;background:var(--fill3);color:var(--label);display:flex;align-items:flex-end;justify-content:center;padding:0 0 5px;overflow:hidden}
 .dayTile i{position:absolute;top:4px;left:5px;font-style:normal;font-size:9px;line-height:10px;color:var(--label2)}
 .dayTile b{font-family:var(--font-num);font-size:12px;line-height:14px;font-weight:500}
-.dayTile.l1,.calLegend .l1{background:#8c2b54}
-.dayTile.l2,.calLegend .l2{background:#b32e68}
-.dayTile.l3,.calLegend .l3{background:#dc2c72}
-.dayTile.l4,.calLegend .l4{background:var(--heat)}
+.dayTile.l1,.calLegend .l1{background:#6f3350}
+.dayTile.l2,.calLegend .l2{background:#92395f}
+.dayTile.l3,.calLegend .l3{background:#b83f70}
+.dayTile.l4,.calLegend .l4{background:#d9457d}
 .dayTile.l1,.dayTile.l2,.dayTile.l3,.dayTile.l4{color:#fff}
 .dayTile.l1 i,.dayTile.l2 i,.dayTile.l3 i,.dayTile.l4 i{color:rgba(255,255,255,.72)}
 .dayTile.future{opacity:.35}
@@ -337,7 +342,8 @@ button.tile:active{background:var(--fill2)}
 .scBtn:active{opacity:.4}
 .scChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .scChips span{font-size:13px;background:var(--fill3);border-radius:999px;padding:5px 11px;font-family:var(--font-num);font-weight:400}
-.scChips .neg{background:color-mix(in srgb,var(--red) 20%,transparent)}
+.scChips span.pos{color:var(--pos)}
+.scChips span.neg{color:var(--neg)}
 .saveAmount{text-align:center;font-family:var(--font-num);font-size:44px!important;font-weight:300;padding:14px!important}
 .tgRow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--sep)}
 .tgRow:last-child{border-bottom:0}
@@ -390,3 +396,6 @@ b,strong{font-weight:500}
 .sectionTitle,.footnote,.day,.tile small,.tile > span,.legend,.favLabel,.importInfo,.impMeta,.calHead span,.dayTile i,.saveCard small,.saveCard .hint,.tab,.donutCenter small,.dayDetail span,.sublabel,.calLegend{font-weight:400}
 .cell,.meta b,.row,.linkbtn,.chips button,.favBtn,.suggest button,.segmented button{font-weight:300}
 .linkbtn.strong,.fcPill,.sheetHead b{font-weight:500}
+
+.tile b.pos,.saveCard b.pos{color:var(--pos)}
+.tile b.neg,.saveCard b.neg{color:var(--neg)}

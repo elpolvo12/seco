@@ -13,6 +13,7 @@ const prevMonthKey = key => { const d = monthDate(key); return monthKey(new Date
 const sgn = n => n > 0 ? '+' : n < 0 ? '−' : '';
 const money = n => eur.format(Math.abs(n));
 const pctDelta = (cur, prev) => prev > 0 ? Math.round((cur - prev) / prev * 100) : null;
+const deltaCls = p => p === null || Math.abs(p) < 1 ? '' : p > 0 ? 'neg' : 'pos';
 const deltaText = p => p === null ? '' : Math.abs(p) < 1 ? '≈ wie Vormonat' : `${p > 0 ? '▲ +' : '▼ '}${Math.abs(p)} %`;
 
 function dayTotals(){
@@ -64,7 +65,7 @@ function saveCardHTML(s, key){
   const chips = (s.isCur ? chip('Heute', s.day) + chip('Woche', s.week) : '') + (done ? `<span>Überwiesen ${eur.format(done)}</span>` : '');
   return `<div class="saveCard">
     <div class="scTop"><span class="ico">${icon('piggy')}</span>
-      <div class="grow"><small>Gespart im Monat</small><b>${sgn(m.saved)}${money(m.saved)}</b></div>
+      <div class="grow"><small>Gespart im Monat</small><b class="${m.saved > 0 ? 'pos' : m.saved < 0 ? 'neg' : ''}">${sgn(m.saved)}${money(m.saved)}</b></div>
       ${s.isCur ? `<button class="scBtn" id="tgBtn">Ins Tagesgeld ›</button>` : ''}</div>
     ${chips ? `<div class="scChips">${chips}</div>` : ''}
   </div>`;
@@ -99,7 +100,7 @@ function catTilesHTML(key, withDelta){
     const p = withDelta ? pctDelta(v, prev[id] || 0) : null;
     return `<button class="tile catTile" data-cat="${id}" style="--c:${color(c.c)}">
       <span class="ico sm">${icon(c.ico)}</span><span class="pct">${pct} %</span>
-      <b>${eur.format(v)}</b><small>${esc(c.name)}</small>${withDelta && p !== null ? `<span class="dl">${deltaText(p)}</span>` : ''}</button>`;
+      <b>${eur.format(v)}</b><small>${esc(c.name)}</small>${withDelta && p !== null ? `<span class="dl ${deltaCls(p)}">${deltaText(p)}</span>` : ''}</button>`;
   }).join('');
 }
 
@@ -119,14 +120,14 @@ function kpiTilesHTML(key, now = new Date()){
     if (e && (!best || e.sum > best.sum)) best = {sum: e.sum, d: dt};
     if (!e && dt >= start) free++;
   }
-  const t = (label, value, sub = '') => `<div class="tile"><small>${label}</small><b>${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
+  const t = (label, value, sub = '', cls = '') => `<div class="tile"><small>${label}</small><b class="${cls}">${value}</b>${sub ? `<span>${sub}</span>` : ''}</div>`;
   const p = pctDelta(total, prevTotal);
   return t('Ø pro Tag', eur.format(total / days), `über ${days} Tage`)
     + t('Ausgaben', list.length, `Ø ${eur.format(total / list.length)}`)
     + t('Größte', eur.format(top.amount), esc(top.note || cat(top.cat).name))
     + t('Teuerster Tag', best ? eur.format(best.sum) : '–', best ? best.d.toLocaleDateString('de-DE', {weekday: 'short', day: 'numeric', month: 'short'}) : '')
     + t('Ohne Ausgabe', `${free} ${free === 1 ? 'Tag' : 'Tage'}`, 'in diesem Monat')
-    + t('Ggü. Vormonat', p === null ? '–' : `${p > 0 ? '▲ +' : p < 0 ? '▼ ' : ''}${Math.abs(p)} %`, prevTotal ? `Vormonat ${eur.format(prevTotal)}` : '');
+    + t('Ggü. Vormonat', p === null ? '–' : `${p > 0 ? '▲ +' : p < 0 ? '▼ ' : ''}${Math.abs(p)} %`, prevTotal ? `Vormonat ${eur.format(prevTotal)}` : '', deltaCls(p));
 }
 
 /* ---------- Kalender-Kacheln (Heatmap) ---------- */
@@ -178,9 +179,9 @@ function monthTilesHTML(key){
     const d = new Date(ms.getFullYear(), ms.getMonth() - k, 1), mk = monthKey(d);
     const total = sum(ofMonth(mk)), prev = sum(ofMonth(prevMonthKey(mk))), p = pctDelta(total, prev);
     const over = state.budget && total > state.budget;
-    out.push(`<button class="tile monthTile${k === 0 ? ' sel' : ''}${over ? ' neg' : ''}" data-m="${mk}">
-      <small>${d.toLocaleDateString('de-DE', {month: 'short', year: '2-digit'}).replace('.', '')}</small><b>${eur.format(total)}</b>
-      <span>${p === null ? (total ? 'neu' : '–') : deltaText(p).replace(' wie Vormonat', '')}</span></button>`);
+    out.push(`<button class="tile monthTile${k === 0 ? ' sel' : ''}" data-m="${mk}">
+      <small>${d.toLocaleDateString('de-DE', {month: 'short', year: '2-digit'}).replace('.', '')}</small><b class="${over ? 'neg' : ''}">${eur.format(total)}</b>
+      <span class="${deltaCls(p)}">${p === null ? (total ? 'neu' : '–') : deltaText(p).replace(' wie Vormonat', '')}</span></button>`);
   }
   return out.join('');
 }
