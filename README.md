@@ -23,6 +23,7 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 - **Prognose:** Monatsende-Schätzung auf der Startseite und als gestrichelte Linie im Verlaufs-Diagramm (Statistik), mit Vormonat zum Vergleich
 - **Favoriten:** häufigste Ausgaben als Tasten – ein Tipp speichert sofort (gedrückt halten blendet aus)
 - **Obergrenze:** Ausgaben gehen nur bis 1000 €; höhere Beträge werden beim Scannen ignoriert
+- **Eigene Farbe je Kategorie:** 25 Farben/Töne (8 Farben in je 3 Tönen + Grau); jede Kategorie hat eine eigene, doppelte werden automatisch neu verteilt
 - **Kategorie für gleiche Namen:** Wird die Kategorie einer Ausgabe geändert, gilt sie für alle Ausgaben mit gleichem Namen (mit Rückgängig) und für künftige Importe
 - **Erfassen:** eigener Ziffernblock, Kategorie, Notiz, Datum; Antippen zum Bearbeiten; nach links wischen zeigt „Löschen“, weit nach links wischen löscht sofort (mit Rückgängig)
 - **Statistik:** letzte 6 Monate mit Budgetlinie, Ringdiagramm nach Kategorie, Kennzahlen (Ø/Tag, größte Ausgabe, Vergleich zum Vormonat)

@@ -225,9 +225,11 @@ svg.ci{fill:currentColor;stroke:none}
 .deleteBtn{width:100%;margin-top:14px;border:0;border-radius:var(--r-md);padding:14px;background:var(--card);color:var(--red);font-weight:500}
 .deleteBtn:active{background:var(--fill3)}
 .catPreview{display:grid;place-items:center;padding:10px 0 18px}
-.swatches{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:6px 0}
-.swatches button{width:40px;height:40px;border-radius:50%;border:3px solid var(--bg);background:var(--c);box-shadow:0 0 0 2px transparent;transition:box-shadow .2s}
+.swatches{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;padding:6px 0}
+.swatches button{aspect-ratio:1;width:100%;border-radius:50%;border:3px solid var(--bg);background:var(--c);box-shadow:0 0 0 2px transparent;transition:box-shadow .2s;display:grid;place-items:center;padding:0;color:#fff}
+.swatches button .ci{width:60%;height:60%}
 .swatches button.on{box-shadow:0 0 0 2px var(--c)}
+.swatches button.used{opacity:.32}
 .iconGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0 4px}
 .iconGrid button{aspect-ratio:1;border:2px solid transparent;border-radius:var(--r-md);background:var(--card);color:var(--sub);display:grid;place-items:center;padding:0;transition:background .15s,color .15s}
 .iconGrid button .ci{width:22px;height:22px}

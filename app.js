@@ -1,10 +1,21 @@
 'use strict';
 
 /* ---------- Farben (validierte Kategorie-Palette, hell/dunkel) ---------- */
-const PALETTE = {
+const BASE_PALETTE = {
   light: ['#257de0','#f47230','#00b894','#f2a600','#ee7fac','#008a17','#6a4ce2','#ec4647','#8e8e93'],
   dark:  ['#338ced','#e76624','#00a888','#d28e05','#e24d8b','#0aac23','#9887ef','#eb6263','#98989f'],
 };
+/* Weitere Töne: Plätze 9–16 und 17–24 sind hellere/dunklere Varianten der 8 Farben (Plätze 0–7) */
+const mixHex = (hex, to, t) => {
+  const a = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)), b = [1, 3, 5].map(i => parseInt(to.slice(i, i + 2), 16));
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('');
+};
+const PALETTE = {
+  light: [...BASE_PALETTE.light, ...BASE_PALETTE.light.slice(0, 8).map(h => mixHex(h, '#000000', .30)), ...BASE_PALETTE.light.slice(0, 8).map(h => mixHex(h, '#ffffff', .40))],
+  dark:  [...BASE_PALETTE.dark,  ...BASE_PALETTE.dark.slice(0, 8).map(h => mixHex(h, '#ffffff', .40)),  ...BASE_PALETTE.dark.slice(0, 8).map(h => mixHex(h, '#000000', .24))],
+};
+const range = (from, n) => Array.from({length: n}, (_, i) => from + i);
+const SWATCH_ORDER = [...range(0, 8), ...range(9, 8), ...range(17, 8), 8];
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
 const isDark = () => (state.theme || 'dark') === 'dark' || (state.theme === 'system' && darkMQ.matches);
 const color = slot => PALETTE[isDark() ? 'dark' : 'light'][slot] ?? PALETTE.light[8];
@@ -47,7 +58,30 @@ function migrateIcons(st){
   st.cats.forEach(c => { const k = EMOJI_TO_ICON[String(c.ico || '').replace(/\uFE0F/g, '')]; if (k) c.ico = k; });
   return st;
 }
-migrateIcons(state); save();
+migrateIcons(state);
+/* Wahrnehmungsabstand (OKLab) zweier Farben – für den „unterscheidbarsten“ freien Platz */
+function oklab(hex){
+  const [r, g, b] = [1, 3, 5].map(i => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  const l = Math.cbrt(.4122214708*r + .5363325363*g + .0514459929*b), m = Math.cbrt(.2119034982*r + .6806995451*g + .1073969566*b), sc = Math.cbrt(.0883024619*r + .2817188376*g + .6299787005*b);
+  return [.2104542553*l + .7936177850*m - .0040720468*sc, 1.9779984951*l - 2.4285922050*m + .4505937099*sc, .0259040371*l + .7827717662*m - .8086757660*sc];
+}
+const colorDist = (a, b) => { const x = oklab(PALETTE.light[a]), y = oklab(PALETTE.light[b]); return Math.hypot(x[0]-y[0], x[1]-y[1], x[2]-y[2]); };
+/* Freier Farbplatz, der sich von allen vergebenen am stärksten unterscheidet (Grau/Platz 8 nur zuletzt) */
+function freeSlot(taken){
+  const used = [...taken];
+  const free = [...Array(25).keys()].filter(i => !taken.has(i) && i !== 8);
+  if (!free.length) return taken.has(8) ? 0 : 8;
+  if (!used.length) return free[0];
+  return free.map(i => [i, Math.min(...used.map(u => colorDist(i, u)))]).sort((a, b) => b[1] - a[1])[0][0];
+}
+/* Jede Kategorie bekommt eine eigene Farbe: erste behält sie, spätere Doppelte bekommen einen neuen Platz */
+function migrateColors(st){
+  const seen = new Set(), dup = [];
+  st.cats.forEach(c => { if (!Number.isInteger(c.c) || c.c < 0 || c.c > 24 || seen.has(c.c)) dup.push(c); else seen.add(c.c); });
+  dup.forEach(c => { c.c = freeSlot(seen); seen.add(c.c); });
+  return dup.length > 0;
+}
+migrateColors(state); save();
 // Einmalig: Kategorie "Tanzen" anlegen und Bargeld dorthin
 if (!state.migDance){
   let t = state.cats.find(c => /^tanzen$/i.test(c.name));
@@ -606,7 +640,7 @@ function openCat(c){
   $('catTitle').textContent = c ? 'Kategorie bearbeiten' : 'Neue Kategorie';
   $('catName').value = c ? c.name : '';
   catIco = c ? c.ico : 'tag';
-  catSlot = c ? c.c : state.cats.length % 8;
+  catSlot = c ? c.c : freeSlot(new Set(state.cats.map(x => x.c)));
   $('catDelete').hidden = !c || state.cats.length <= 1;
   renderCatPreview();
   openSheet('catSheet');
@@ -615,13 +649,16 @@ function renderCatPreview(){
   $('catPrevIco').style.setProperty('--c', color(catSlot));
   $('catPrevIco').innerHTML = icon(catIco);
   $('iconGrid').innerHTML = ICON_PICKER.map(k => `<button data-k="${k}" class="${k===catIco?'on':''}" style="--c:${color(catSlot)}" aria-label="${k}">${icon(k)}</button>`).join('');
-  $('swatches').innerHTML = PALETTE.light.map((_, i) => `<button data-s="${i}" class="${i===catSlot?'on':''}" style="--c:${color(i)}" aria-label="Farbe ${i+1}"></button>`).join('');
+  const owner = i => state.cats.find(x => x !== editCat && x.c === i);
+  $('swatches').innerHTML = SWATCH_ORDER.map(i => { const o = owner(i);
+    return `<button data-s="${i}" class="${i===catSlot?'on':''}${o?' used':''}" style="--c:${color(i)}" ${o?`disabled title="${esc(o.name)}"`:''} aria-label="Farbe ${i+1}${o?' (vergeben an '+esc(o.name)+')':''}">${o?icon(o.ico):''}</button>`; }).join('');
 }
 $('iconGrid').onclick = e => { const b = e.target.closest('button'); if (b){ catIco = b.dataset.k; renderCatPreview(); } };
 $('swatches').onclick = e => { const b = e.target.closest('button'); if (b){ catSlot = +b.dataset.s; renderCatPreview(); } };
 $('catSave').onclick = () => {
   const name = $('catName').value.trim();
   if (!name){ $('catName').focus(); return; }
+  if (state.cats.some(x => x !== editCat && x.c === catSlot)) catSlot = freeSlot(new Set(state.cats.filter(x => x !== editCat).map(x => x.c)));
   const data = {name, ico: catIco, c: catSlot};
   if (editCat) Object.assign(editCat, data);
   else state.cats.push({id: 'c' + Date.now().toString(36), ...data});
@@ -662,7 +699,7 @@ $('importFile').onchange = async e => {
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
     state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : [], savings: Array.isArray(d.savings) ? d.savings : [], favs: d.favs, favHidden: Array.isArray(d.favHidden) ? d.favHidden : []};
-    roundAll(state); migrateIcons(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
+    roundAll(state); migrateIcons(state); migrateColors(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
@@ -835,7 +872,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.32';
+const APP_VERSION = '1.33';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
