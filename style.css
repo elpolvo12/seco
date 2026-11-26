@@ -438,3 +438,7 @@ b,strong{font-weight:500}
 .linkbtn,.scBtn,.cell.add,.rawLink,.hintBtn{color:transparent;background-image:var(--link-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .heroCard .linkbtn{background-image:none;-webkit-text-fill-color:#fff;color:#fff}
 .toast button{color:var(--tab1)}
+
+/* + Knopf: gleicher holografischer Verlauf wie die Karte, schimmert beim Scrollen mit */
+.addbtn{background-color:#3d33a3;background-image:linear-gradient(135deg,#1f7391 0%,#3d33a3 30%,#9b2f82 60%,#a2693a 85%,#1f836a 100%);background-size:260% 260%;background-position:calc(10% + var(--hs,0) * 1.5%) 50%;border:.5px solid rgba(255,255,255,.35);box-shadow:0 8px 22px rgba(94,60,160,.45)}
+.addbtn .ci{color:#fff}

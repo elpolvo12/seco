@@ -161,7 +161,7 @@ function syncCompactBar(){
 let holoRaf = 0;
 addEventListener('scroll', () => {
   $('compactBar').classList.toggle('show', scrollY > 48);
-  if (!holoRaf) holoRaf = requestAnimationFrame(() => { holoRaf = 0; $('hero').style.setProperty('--hs', (Math.sin(scrollY / 170) * 30).toFixed(1)); });
+  if (!holoRaf) holoRaf = requestAnimationFrame(() => { holoRaf = 0; { const v = (Math.sin(scrollY / 170) * 30).toFixed(1); $('hero').style.setProperty('--hs', v); document.documentElement.style.setProperty('--hs', v); } });
 }, {passive: true});
 
 /* ---------- Übersicht ---------- */
@@ -863,7 +863,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.55';
+const APP_VERSION = '1.56';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
