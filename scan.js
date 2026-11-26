@@ -78,15 +78,23 @@ function niceName(t){
 /* Kategorien, wie Banking-Apps sie anzeigen -> App-Kategorie */
 const BANK_CATS = [
   [/gastronomie|restaurant|essen\s*(&|und)\s*trinken|lieferdienst|caf[eé]s?\b|bars?\b/i, 'out'],
-  [/lebensmittel|supermarkt|drogerie\s*&\s*lebensmittel/i, 'food'],
-  [/mobilit[aä]t|verkehr|tanken|tankstelle|[öo]pnv|auto\b|transport|taxi|reisen?\b/i, 'transport'],
-  [/gesundheit|apotheke|medizin|drogerie|k[öo]rperpflege/i, 'health'],
-  [/wohnen|miete|haushalt|energie|nebenkosten|versicherung|internet|telefon|mobilfunk/i, 'home'],
-  [/streaming|unterhaltung|freizeit|kultur|sport|hobby|urlaub|abo(nnement)?s?\b/i, 'fun'],
-  [/shopping|kleidung|mode\b|elektronik|online.?shopping|einkaufen/i, 'shop'],
-  [/dienstleistung(en)?|sonstiges?|geb[uü]hren|bargeld|bildung/i, 'other'],
+  [/lebensmittel|supermarkt/i, 'food'],
+  [/mobilit[aä]t|verkehr|tank|lade(stelle|s[aä]ule|station)|e-?auto|[öo]pnv|auto\b|transport|taxi|parken|parkhaus|bahn|flug|reisen?\b/i, 'transport'],
+  [/gesundheit|apotheke|medizin|drogerie|k[öo]rperpflege|beauty|friseur/i, 'health'],
+  [/wohnen|miete|haushalt|energie|strom|nebenkosten|versicherung|internet|telefon|mobilfunk|telekommunikation|m[öo]bel|garten|baumarkt/i, 'home'],
+  [/streaming|unterhaltung|freizeit|kultur|sport|hobby|urlaub|hotel|medien|abo(nnement)?s?\b|spiele|kino/i, 'fun'],
+  [/shopping|kleidung|mode\b|elektronik|online.?shopping|einkaufen|geschenke/i, 'shop'],
+  [/dienstleistung(en)?|sonstiges?|geb[uü]hren|bargeld|bildung|spenden|steuern|kinder|haustiere/i, 'other'],
 ];
-const BANK_CAT_LINE = new RegExp('^(' + BANK_CATS.map(([re]) => re.source).join('|') + ')$', 'i');
+// Typische Kategorie-Bezeichnungen der Banking-Apps (als ganze Zeile)
+const BANK_CAT_LABELS = ['gastronomie','restaurants?','lebensmittel','supermarkt','shopping','streaming','hobby','hobbys','dienstleistungen',
+  'tank-?\\s*(&|und)\\s*ladestelle','tankstelle','tanken','mobilit[aä]t','verkehr','[öo]ffentliche verkehrsmittel','[öo]pnv','auto','parken','taxi',
+  'gesundheit','drogerie','k[öo]rperpflege','beauty','wohnen','miete','haushalt','energie','versicherungen?','telekommunikation','internet',
+  'freizeit','unterhaltung','kultur','sport','reisen','urlaub','hotel','medien','abonnements?','kleidung','mode','elektronik','geschenke',
+  'sonstiges','geb[uü]hren','bargeld','bildung','spenden','steuern','kinder','haustiere','lieferdienste?','caf[eé]s?','bars?','m[öo]bel','garten','baumarkt'];
+const BANK_CAT_LINE = new RegExp('^(' + BANK_CAT_LABELS.join('|') + ')$', 'i');
+// "Einkauf Hobby", "Lastschrift Versicherungen": Buchungsart + Kategorie
+const TYPE_CAT = /^\s*(einkauf|kartenzahlung|lastschrift|basislastschrift|[üu]berweisung|dauerauftrag|gutschrift)\s+(.{3,30})$/i;
 
 /* Banking-Screenshot: Liste von Umsätzen mit Datumsüberschriften */
 const BankParser = (() => {
@@ -142,8 +150,13 @@ const BankParser = (() => {
         continue;
       }
       if (d){ curDate = d; continue; }
-      const n = cleanName(line);
-      if (BANK_CAT_LINE.test(n)){ const last = amts[amts.length - 1]; if (last && !last.bankCat) last.bankCat = n; continue; }
+      const tc = line.match(TYPE_CAT);
+      const n = tc ? tc[2].trim() : cleanName(line);
+      if (amts.length || tc || BANK_CAT_LINE.test(n)){            // rechte Spalte: Kategorie
+        const last = amts[amts.length - 1];
+        if (last && !last.bankCat && isNameLike(n)) last.bankCat = n;
+        continue;
+      }
       if (isNameLike(n)) names.push({name: n, date: curDate});
     }
     if (amts.length < 2 || names.length !== amts.length) return null;
@@ -167,10 +180,11 @@ const BankParser = (() => {
       const d = dateOf(line, today);
       if (!m){
         if (d){ closeBlock(); curDate = d; dateHeaders++; pendingName = ''; continue; }
-        const n = cleanName(line);
-        if (BANK_CAT_LINE.test(n)){
+        const tc = line.match(TYPE_CAT);
+        const n = tc ? tc[2].trim() : cleanName(line);
+        if (tc || BANK_CAT_LINE.test(n)){
           const last = raw[raw.length - 1];
-          if (last && !last.bankCat) last.bankCat = n;
+          if (last && !last.bankCat && isNameLike(n)) last.bankCat = n;
           continue;
         }
         if (isNameLike(n)){ pendingName = n; block.names.push(n); }
