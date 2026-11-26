@@ -150,6 +150,9 @@
     </div>
     <div class="amountRow">
       <div class="amountDisplay" id="amountDisplay"></div>
+      <button class="scanBtn left" id="pasteBtn" aria-label="Text einfügen">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      </button>
       <button class="scanBtn" id="scanBtn" aria-label="Beleg scannen">
         <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg>
       </button>
@@ -182,6 +185,20 @@
     </div>
     <p class="importInfo" id="importInfo"></p>
     <div class="card group" id="importList"></div>
+  </div>
+</div>
+
+<!-- SHEET: TEXT EINFÜGEN -->
+<div class="sheetWrap" id="pasteSheet">
+  <div class="backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheetHead">
+      <button class="linkbtn" data-close>Abbrechen</button>
+      <b>Text einfügen</b>
+      <button class="linkbtn strong" id="pasteGo">Auswerten</button>
+    </div>
+    <textarea id="pasteArea" class="pasteArea" placeholder="Hier gedrückt halten → Einfügen"></textarea>
+    <p class="importInfo">So kopierst du Text aus einem Bild: Foto oder Screenshot öffnen → unten rechts auf das Live-Text-Symbol tippen → <b>Alle kopieren</b>. Danach hier einfügen.</p>
   </div>
 </div>
 

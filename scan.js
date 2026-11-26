@@ -112,30 +112,43 @@ const BankParser = (() => {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const raw = [];
     let curDate = null, pendingName = '', dateHeaders = 0;
+    let block = {names: [], nameless: []};             // Abschnitt zwischen Datumsüberschriften
+    const closeBlock = () => {
+      // Live Text kopiert manchmal erst alle Namen, dann alle Beträge: dann der Reihe nach zuordnen
+      if (block.nameless.length > 1 && block.names.length === block.nameless.length)
+        block.nameless.forEach((r, i) => { r.name = block.names[i]; });
+      block = {names: [], nameless: []};
+    };
     for (const line of lines){
       if (BALANCE.test(line)){ pendingName = ''; continue; }
       const m = line.match(AMT);
       const d = dateOf(line, today);
       if (!m){
-        if (d){ curDate = d; dateHeaders++; pendingName = ''; continue; }
+        if (d){ closeBlock(); curDate = d; dateHeaders++; pendingName = ''; continue; }
         const n = cleanName(line);
-        if (isNameLike(n)) pendingName = n;
+        if (isNameLike(n)){ pendingName = n; block.names.push(n); }
         continue;
       }
       const sign = m[2] ? (m[2] === '+' ? '+' : '-') : '';
       const amount = parseFloat(m[3].replace(/[.\s]/g, '') + '.' + m[4]);
       let name = cleanName(line.slice(0, m.index + m[1].length).replace(/(?<!\d)\d{1,2}\.\d{1,2}\.(\d{2,4})?/, ''));
-      if (!isNameLike(name)) name = pendingName;
-      raw.push({name, amount, sign, date: d || curDate, hasCurrency: !!m[5]});
+      const own = isNameLike(name);
+      if (!own) name = pendingName;
+      const r = {name, amount, sign, date: d || curDate, hasCurrency: !!m[5]};
+      raw.push(r);
+      if (!own) block.nameless.push(r); else block.names.push(name);
       pendingName = '';
     }
-    const signed = raw.filter(r => r.sign).length;
+    closeBlock();
+    const minus = raw.filter(r => r.sign === '-').length;
     const entries = raw
-      .filter(r => signed ? r.sign === '-' : true)            // mit Vorzeichen: nur Abbuchungen
+      .filter(r => r.sign !== '+')                             // Plus (Gutschriften) immer ignorieren
+      .filter(r => minus ? r.sign === '-' : true)              // gibt es Minus-Beträge, nur diese
       .filter(r => r.amount > 0 && r.amount <= MAX_AMOUNT)     // > 1000 € ignorieren
       .filter(r => r.name)
       .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today)}))
       .filter(r => r.amount > 0);
+    const signed = raw.filter(r => r.sign).length;
     const looksLikeBank = raw.length >= 2 && (signed >= 2 || dateHeaders >= 1 || raw.filter(r => r.hasCurrency).length >= 2);
     return {entries, looksLikeBank};
   }
@@ -206,6 +219,25 @@ async function recognize(file, onProgress){
 
 /* ---------- Oberfläche: Scan-Taste im Eingabefenster ---------- */
 $('scanBtn').onclick = () => $('scanFile').click();
+function applyText(text){
+  const receipt = ReceiptParser.parse(text);
+  const bank = BankParser.parse(text);
+  if (!receipt.isReceipt && bank.looksLikeBank && bank.entries.length){
+    renderAmount();
+    closeSheet('expenseSheet');
+    openImport(bank.entries);
+    return;
+  }
+  if (receipt.amount) amountStr = String(Math.round(receipt.amount));
+  renderAmount(); renderSuggest();
+  if (receipt.date) $('date').value = receipt.date;
+  if (receipt.store && !$('note').value.trim()){ locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; $('note').value = receipt.store; }
+  const c = !catTouched && guessCat(receipt.store);
+  if (c){ selCat = c; renderChips(); renderSuggest(); }
+  const found = [receipt.amount && 'Betrag', receipt.date && 'Datum', receipt.store && 'Geschäft'].filter(Boolean);
+  toast(found.length ? `Übernommen: ${found.join(', ')} – bitte prüfen` : 'Kein Betrag bis 1000 € erkannt – bitte von Hand eingeben');
+}
+
 $('scanFile').onchange = async e => {
   const file = e.target.files[0]; e.target.value = '';
   if (!file) return;
@@ -217,28 +249,30 @@ $('scanFile').onchange = async e => {
   try {
     const text = await recognize(file, p => msg(`Bild wird gelesen … ${Math.round(p * 100)} %`));
     if (session !== sheetSession) return;
-    const receipt = ReceiptParser.parse(text);
-    const bank = BankParser.parse(text);
-    if (!receipt.isReceipt && bank.looksLikeBank && bank.entries.length){
-      renderAmount();
-      closeSheet('expenseSheet');
-      openImport(bank.entries);
-      return;
-    }
-    if (receipt.amount) amountStr = String(Math.round(receipt.amount));
-    renderAmount(); renderSuggest();
-    if (receipt.date) $('date').value = receipt.date;
-    if (receipt.store && !$('note').value.trim()){ locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; $('note').value = receipt.store; }
-    const c = !catTouched && guessCat(receipt.store);
-    if (c){ selCat = c; renderChips(); renderSuggest(); }
-    const found = [receipt.amount && 'Betrag', receipt.date && 'Datum', receipt.store && 'Geschäft'].filter(Boolean);
-    toast(found.length ? `Übernommen: ${found.join(', ')} – bitte prüfen` : 'Kein Betrag bis 1000 € erkannt – bitte von Hand eingeben');
+    applyText(text);
   } catch (err) {
     renderAmount();
     toast(err.message || 'Bild konnte nicht gelesen werden');
   } finally {
     btn.classList.remove('busy'); btn.disabled = false;
   }
+};
+
+/* ---------- Text einfügen (z. B. mit Live Text vom iPhone kopiert) ---------- */
+$('pasteBtn').onclick = async () => {
+  let text = '';
+  try { text = await navigator.clipboard.readText(); } catch {}
+  if (text && /\d[,.]\d{2}/.test(text)) return applyText(text);
+  // Zwischenablage nicht lesbar oder leer: Feld zum Einfügen anzeigen
+  $('pasteArea').value = text || '';
+  openSheet('pasteSheet');
+  setTimeout(() => $('pasteArea').focus(), 350);
+};
+$('pasteGo').onclick = () => {
+  const text = $('pasteArea').value;
+  if (!/\d[,.]\d{2}/.test(text)){ toast('Kein Betrag im Text gefunden'); return; }
+  closeSheet('pasteSheet');
+  applyText(text);
 };
 
 /* ---------- Mehrere Ausgaben aus Screenshot prüfen & übernehmen ---------- */
