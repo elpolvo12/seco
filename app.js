@@ -110,8 +110,7 @@ function budgetStatus(total, budget, key){
   else {
     const rest = budget - total;
     if (isCurrent){
-      const daysLeft = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate() - now.getDate() + 1;
-      text = `Noch <b>${eur.format(rest)}</b> · ${eur.format(rest/daysLeft)} pro Tag`;
+      text = `Noch <b>${eur.format(rest)}</b> von ${eur0.format(budget)}`;
     } else text = `<b>${eur.format(rest)}</b> von ${eur0.format(budget)} übrig`;
     if (pct >= .8) text = '⚠️ ' + text;
   }
@@ -133,6 +132,7 @@ function renderHome(){
     $('budgetFill').parentElement.className = 'progress ' + s.cls;
     $('budgetText').innerHTML = s.text;
   }
+  renderInsights(key);
 
   const byCat = groupByCat(month);
   $('catCard').hidden = !byCat.length;
@@ -140,6 +140,7 @@ function renderHome(){
   $('legend').innerHTML = byCat.map(([id,v]) => `<span style="--c:${color(cat(id).c)}">${esc(cat(id).name)} <b>${eur.format(v)}</b></span>`).join('');
 
   const q = $('search').value.trim().toLowerCase();
+  renderFavs(key, q);
   let list = q ? state.items.filter(i => matches(i, q)) : month;
   list = list.slice().sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
 
@@ -334,11 +335,194 @@ $('expSave').onclick = () => {
 };
 $('expDelete').onclick = () => { if (editing){ const id = editing.id; closeSheet('expenseSheet'); removeItem(id); } };
 
+/* ---------- Prognose, „Heute noch“, Favoriten ---------- */
+const daysIn = (y, m) => new Date(y, m, 0).getDate();
+
+/* Prognose Monatsende: bisherige Ausgaben + Resttage × Tagesschnitt.
+   Anfang des Monats zählt der Schnitt der letzten Monate stärker, später dein aktuelles Tempo. */
+function forecast(key, now = new Date()){
+  const [y, m] = key.split('-').map(Number);
+  const dim = daysIn(y, m), isCurrent = key === monthKey(now);
+  const spent = sum(ofMonth(key));
+  const hist = [];
+  for (let k = 1; k <= 3; k++){ const t = sum(ofMonth(monthKey(new Date(y, m - 1 - k, 1)))); if (t > 0) hist.push(t); }
+  const histAvg = hist.length ? hist.reduce((a, b) => a + b, 0) / hist.length : null;
+  let projected = null;
+  const elapsed = isCurrent ? now.getDate() : dim;
+  if (isCurrent && (elapsed >= 3 || histAvg)){
+    const curRate = spent / elapsed;
+    const w = Math.min(1, elapsed / 10);
+    const rate = histAvg ? w * curRate + (1 - w) * histAvg / dim : curRate;
+    projected = Math.round(Math.max(spent, spent + (dim - elapsed) * rate));
+  }
+  return {dim, elapsed, spent, projected, histAvg: histAvg ? Math.round(histAvg) : null, isCurrent};
+}
+
+/* Was darf ich heute noch ausgeben? Rest von Budget (sonst Ø der letzten Monate) ÷ verbleibende Tage */
+function todayLeft(now = new Date()){
+  const key = monthKey(now), f = forecast(key, now);
+  const target = state.budget || f.histAvg;
+  if (!target) return null;
+  const todayStr = iso(now);
+  const spentToday = sum(state.items.filter(i => i.date === todayStr));
+  const before = sum(state.items.filter(i => i.date.startsWith(key) && i.date < todayStr));
+  const daysLeft = f.dim - now.getDate() + 1;
+  const allowance = (target - before) / daysLeft;
+  return {left: Math.round(allowance - spentToday), allowance: Math.round(allowance), exhausted: target - before <= 0, byBudget: !!state.budget};
+}
+
+function renderInsights(key){
+  const now = new Date(), isCur = key === monthKey(now);
+  const f = forecast(key, now), t = isCur ? todayLeft(now) : null;
+  const tl = $('todayLeft');
+  tl.hidden = !t;
+  if (t){
+    const src = t.byBudget ? 'nach Budget' : 'nach Ø der letzten Monate';
+    let big, cls;
+    if (t.exhausted){ big = t.byBudget ? 'Budget aufgebraucht' : 'Schon über dem üblichen Monat'; cls = 'over'; }
+    else if (t.left < 0){ big = `Heute ${eur.format(-t.left)} über Tagesbudget`; cls = 'over'; }
+    else { big = `Heute noch ${eur.format(t.left)}`; cls = t.left <= t.allowance * 0.25 ? 'warn' : ''; }
+    tl.className = 'todayLeft ' + cls;
+    tl.innerHTML = `<b>${big}</b>${t.exhausted ? '' : `<small>Tagesbudget ${eur.format(t.allowance)} · ${src}</small>`}`;
+  }
+  const fc = $('forecast');
+  fc.hidden = !(isCur && f.projected);
+  if (!fc.hidden){
+    let extra = '';
+    if (state.budget) extra = f.projected > state.budget ? ` · ▲ ${eur.format(f.projected - state.budget)} über Budget` : ' · im Budget ✓';
+    else if (f.histAvg){
+      const pct = Math.round((f.projected - f.histAvg) / f.histAvg * 100);
+      extra = Math.abs(pct) < 3 ? ` · ≈ Ø ${eur.format(f.histAvg)}` : ` · ${pct > 0 ? '▲ +' : '▼ '}${pct} % zu Ø ${eur.format(f.histAvg)}`;
+    }
+    fc.innerHTML = `Prognose Monatsende: <b>${eur.format(f.projected)}</b>${extra}`;
+  }
+}
+
+/* Favoriten: häufigste Ausgaben (Name + Betrag), jüngere zählen mehr */
+function computeFavorites(now = new Date()){
+  const hidden = new Set(state.favHidden || []);
+  const map = new Map();
+  state.items.forEach(i => {
+    const note = (i.note || '').trim(), amt = Math.round(i.amount);
+    if (!(amt > 0)) return;
+    const age = Math.max(0, (now - new Date(i.date + 'T12:00')) / 864e5);
+    if (age > 180) return;
+    const key = (note ? note.toLowerCase() : '#' + i.cat) + '|' + amt;
+    let e = map.get(key);
+    if (!e) map.set(key, e = {key, note, amt, cat: i.cat, score: 0, count: 0, last: i.date});
+    e.score += Math.pow(0.5, age / 60); e.count++;
+    if (i.date >= e.last){ e.last = i.date; e.cat = i.cat; e.note = note; }
+  });
+  return [...map.values()].filter(e => e.count >= 2 && !hidden.has(e.key)).sort((a, b) => b.score - a.score).slice(0, 6);
+}
+function renderFavs(key, q){
+  const box = $('favs');
+  const favs = state.favs !== false && !q && key === monthKey(new Date()) ? computeFavorites() : [];
+  box.hidden = !favs.length;
+  box.innerHTML = favs.length
+    ? `<div class="favLabel"><span>Schnell erfassen</span><small>gedrückt halten = ausblenden</small></div><div class="favRow">` +
+      favs.map(f => `<button class="favBtn" data-fav="${encodeURIComponent(f.key)}">${cat(f.cat).ico} ${esc(f.note || cat(f.cat).name)} · <b>${eur.format(f.amt)}</b></button>`).join('') + '</div>'
+    : '';
+}
+function quickAdd(key){
+  const f = computeFavorites().find(x => x.key === key); if (!f) return;
+  const today = iso(new Date()), mk = today.slice(0, 7), before = sum(ofMonth(mk));
+  const item = {id: Date.now(), amount: f.amt, cat: f.cat, note: f.note, date: today};
+  state.items.push(item); save(); render();
+  const after = before + f.amt, b = state.budget;
+  let msg = `${f.note || cat(f.cat).name} ${eur.format(f.amt)} gespeichert`;
+  if (b && before <= b && after > b) msg = '⚠️ Monatsbudget überschritten';
+  else if (b && before < .8 * b && after >= .8 * b) msg = '⚠️ 80 % des Budgets erreicht';
+  toast(msg, 'Rückgängig', () => { state.items = state.items.filter(i => i.id !== item.id); save(); render(); });
+}
+function hideFav(key){
+  state.favHidden = [...(state.favHidden || []), key]; save(); render();
+  toast('Favorit ausgeblendet', 'Rückgängig', () => { state.favHidden = state.favHidden.filter(k => k !== key); save(); render(); });
+}
+let favTimer = null, favLong = false;
+$('favs').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-fav]'); if (!b) return;
+  favLong = false; clearTimeout(favTimer);
+  favTimer = setTimeout(() => { favLong = true; hideFav(decodeURIComponent(b.dataset.fav)); }, 650);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('favs').addEventListener(ev, () => clearTimeout(favTimer)));
+$('favs').addEventListener('click', e => {
+  const b = e.target.closest('[data-fav]'); if (!b) return;
+  if (favLong){ favLong = false; return; }
+  quickAdd(decodeURIComponent(b.dataset.fav));
+});
+$('favs').addEventListener('contextmenu', e => e.preventDefault());
+
 /* ---------- Statistik ---------- */
 function renderStats(){
+  renderTrend();
   renderMonthChart();
   renderDonut();
   renderKpis();
+}
+
+/* Verlauf im Monat: Summe pro Tag, Vormonat zum Vergleich, gestrichelt die Prognose */
+function cumulative(key){
+  const [y, m] = key.split('-').map(Number), dim = daysIn(y, m);
+  const cum = new Array(dim + 1).fill(0);
+  ofMonth(key).forEach(i => { cum[+i.date.slice(8, 10)] += i.amount; });
+  for (let d = 1; d <= dim; d++) cum[d] += cum[d - 1];
+  return {dim, cum};
+}
+function renderTrend(){
+  const svg = $('trendChart'), tip = $('trendTip');
+  const key = monthKey(view), f = forecast(key), now = new Date();
+  const cur = cumulative(key), prev = cumulative(monthKey(new Date(view.getFullYear(), view.getMonth() - 1, 1)));
+  const dim = cur.dim, last = f.isCurrent ? Math.min(now.getDate(), dim) : dim;
+  const W = svg.clientWidth || 340, H = 210, padL = 8, padR = 14, padT = 26, padB = 22;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  tip.classList.remove('show');
+  if (!(cur.cum[dim] > 0 || prev.cum[prev.dim] > 0)){
+    svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle">Noch keine Daten</text>`;
+    $('trendLegend').innerHTML = ''; svg.onpointermove = svg.onpointerdown = svg.onpointerleave = null; return;
+  }
+  const max = Math.max(cur.cum[dim], prev.cum[prev.dim], f.projected || 0, state.budget || 0, 1) * 1.1;
+  const plotH = H - padT - padB, xs = (W - padL - padR) / Math.max(1, dim - 1);
+  const X = d => padL + (d - 1) * xs, Y = v => padT + plotH - v / max * plotH;
+  const pts = (c, n) => Array.from({length: n}, (_, i) => `${X(i + 1).toFixed(1)},${Y(c[i + 1]).toFixed(1)}`).join(' ');
+  let out = `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  [1, 8, 15, 22, ...(dim - 22 >= 4 ? [dim] : [])].forEach(d => {
+    out += `<text x="${X(d)}" y="${H - 5}" text-anchor="middle">${d}.</text>`;
+  });
+  if (state.budget){
+    out += `<line class="budgetLine" x1="${padL}" x2="${W - padR}" y1="${Y(state.budget)}" y2="${Y(state.budget)}"/>`;
+    out += `<text x="${padL + 2}" y="${Y(state.budget) - 5}">Budget ${eur0.format(state.budget)}</text>`;
+  }
+  out += `<polyline class="tl tl-prev" points="${pts(prev.cum, Math.min(prev.dim, dim))}"/>`;
+  out += `<polyline class="tl tl-cur" points="${pts(cur.cum, last)}"/>`;
+  if (f.isCurrent && f.projected && last < dim){
+    out += `<line class="tl tl-proj" x1="${X(last)}" y1="${Y(cur.cum[last])}" x2="${X(dim)}" y2="${Y(f.projected)}"/>`;
+    out += `<text class="endLabel" x="${W - padR}" y="${Y(f.projected) - 8}" text-anchor="end">≈ ${eur0.format(f.projected)}</text>`;
+  } else {
+    out += `<text class="endLabel" x="${X(last)}" y="${Y(cur.cum[last]) - 8}" text-anchor="end">${eur0.format(cur.cum[last])}</text>`;
+  }
+  out += `<circle class="tl-dot" cx="${X(last)}" cy="${Y(cur.cum[last])}" r="4"/>`;
+  out += `<line class="cross" id="trendCross" y1="${padT}" y2="${Y(0)}" x1="0" x2="0" style="display:none"/>`;
+  svg.innerHTML = out;
+  $('trendLegend').innerHTML =
+    `<span class="lg" style="--c:var(--accent)">Dieser Monat</span>` +
+    (f.isCurrent && f.projected ? `<span class="lg dash" style="--c:var(--accent)">Prognose</span>` : '') +
+    `<span class="lg" style="--c:var(--sub)">Vormonat</span>` +
+    (state.budget ? `<span class="lg dash" style="--c:var(--critical)">Budget</span>` : '');
+  const monthShort = view.toLocaleDateString('de-DE', {month: 'short'}).replace('.', '');
+  const show = e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    const d = Math.max(1, Math.min(dim, Math.round((px - padL) / xs) + 1));
+    let txt;
+    if (f.isCurrent && f.projected && d > last)
+      txt = `${d}. ${monthShort}: Prognose ≈ ${eur0.format(cur.cum[last] + (f.projected - cur.cum[last]) * (d - last) / (dim - last))}`;
+    else txt = `${d}. ${monthShort}: ${eur0.format(cur.cum[d])}`;
+    if (d <= prev.dim) txt += ` · Vormonat ${eur0.format(prev.cum[d])}`;
+    tip.textContent = txt; tip.style.left = Math.max(110, Math.min(W - 110, X(d))) + 'px'; tip.classList.add('show');
+    const c = $('trendCross'); c.setAttribute('x1', X(d)); c.setAttribute('x2', X(d)); c.style.display = '';
+  };
+  svg.onpointermove = svg.onpointerdown = show;
+  svg.onpointerleave = () => { tip.classList.remove('show'); const c = $('trendCross'); if (c) c.style.display = 'none'; };
 }
 function renderMonthChart(){
   const svg = $('monthChart');
@@ -409,6 +593,9 @@ function renderSettings(){
   if (document.activeElement !== $('budgetInput'))
     $('budgetInput').value = state.budget ? state.budget.toLocaleString('de-DE') + ' €' : '';
   $('locToggle').checked = !!state.loc;
+  $('favToggle').checked = state.favs !== false;
+  $('favHiddenCount').textContent = (state.favHidden || []).length;
+  $('favReset').disabled = !(state.favHidden || []).length;
   $('homeLabel').textContent = state.home ? 'Zuhause neu festlegen' : 'Aktuellen Standort als Zuhause festlegen';
   $('homeState').textContent = state.home ? '✓' : '›';
   $('homeClear').hidden = !state.home;
@@ -487,7 +674,7 @@ $('importFile').onchange = async e => {
     const items = Array.isArray(d) ? d : d.items;
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
-    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : []};
+    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : [], favs: d.favs, favHidden: Array.isArray(d.favHidden) ? d.favHidden : []};
     roundAll(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
@@ -632,6 +819,8 @@ $('homeSet').onclick = async () => {
   } catch (err) { toast(err.code === 1 ? 'Standortzugriff verweigert' : 'Standort nicht verfügbar'); }
   renderSettings();
 };
+$('favToggle').onchange = e => { state.favs = e.target.checked; save(); };
+$('favReset').onclick = () => { state.favHidden = []; save(); renderSettings(); toast('Favoriten zurückgeholt'); };
 $('placesClear').onclick = () => {
   if (!state.places.length || !confirm(`${state.places.length} bekannte Orte vergessen?`)) return;
   state.places = []; save(); renderSettings(); toast('Bekannte Orte gelöscht');
@@ -660,7 +849,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.23';
+const APP_VERSION = '1.24';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);

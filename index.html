@@ -27,10 +27,12 @@
   <div class="card hero">
     <div class="sublabel">Ausgegeben</div>
     <div class="total" id="total"></div>
+    <div class="todayLeft" id="todayLeft" hidden></div>
     <div id="budgetBox" hidden>
       <div class="progress"><i id="budgetFill"></i></div>
       <div class="budgetText" id="budgetText"></div>
     </div>
+    <div class="forecast" id="forecast" hidden></div>
     <button class="linkbtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
   </div>
 
@@ -38,6 +40,8 @@
     <div class="stack" id="bar"></div>
     <div class="legend" id="legend"></div>
   </div>
+
+  <div class="favs" id="favs" hidden></div>
 
   <div class="search">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -53,6 +57,13 @@
     <button class="navbtn" data-month="-1" aria-label="Voriger Monat">‹</button>
     <h1 class="monthTitle"></h1>
     <button class="navbtn" data-month="1" aria-label="Nächster Monat">›</button>
+  </div>
+
+  <h3 class="sectionTitle">Verlauf im Monat</h3>
+  <div class="card chartCard">
+    <div class="tip" id="trendTip"></div>
+    <svg id="trendChart" class="chart" role="img" aria-label="Summe der Ausgaben im Verlauf des Monats, mit Prognose"></svg>
+    <div class="legend" id="trendLegend"></div>
   </div>
 
   <h3 class="sectionTitle">Letzte 6 Monate</h3>
@@ -87,6 +98,16 @@
       </div>
     </div>
   </div>
+
+  <h3 class="sectionTitle">Startseite</h3>
+  <div class="card group">
+    <label class="cell">
+      <span>Favoriten-Tasten</span>
+      <input type="checkbox" class="switch" id="favToggle">
+    </label>
+    <button class="cell action" id="favReset"><span>Ausgeblendete Favoriten zurückholen</span><span class="chev" id="favHiddenCount">0</span></button>
+  </div>
+  <p class="footnote">Favoriten sind deine häufigsten Ausgaben (z. B. „Bäcker 3 €“). Ein Tipp speichert sie sofort für heute. Gedrückt halten blendet einen Favoriten aus.</p>
 
   <h3 class="sectionTitle">Budget</h3>
   <div class="card group">
