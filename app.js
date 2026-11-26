@@ -203,6 +203,7 @@ $('add').onclick = () => openExpense();
 function openExpense(item){
   editing = item || null;
   sheetSession++; here = null; catTouched = false; knownPlace = null;
+  noteSource = item && item.note ? 'user' : '';
   $('expTitle').textContent = item ? 'Bearbeiten' : 'Neue Ausgabe';
   amountStr = item ? String(Math.round(item.amount)) : '';
   $('note').value = item ? item.note : '';
@@ -467,7 +468,7 @@ let locRun = 0;
 async function fillLocation(){
   const run = ++locRun, session = sheetSession;
   const sheetOpen = () => session === sheetSession && $('expenseSheet').classList.contains('open') && !editing;
-  const stillValid = () => run === locRun && sheetOpen() && !$('note').value.trim();
+  const stillValid = () => run === locRun && sheetOpen() && (noteSource === '' || noteSource === 'location');
   setLocBadge('busy');
   $('note').placeholder = 'Ort wird gesucht …';
   try {
@@ -478,13 +479,13 @@ async function fillLocation(){
     here = pos;
     const known = findPlace(pos);
     if (known){ // bekannter Ort: sofort übernehmen, ohne Internet
-      if (stillValid()) $('note').value = known.name;
+      if (stillValid()){ $('note').value = known.name; noteSource = 'location'; }
       if (!catTouched && state.cats.some(c => c.id === known.cat)){ selCat = known.cat; renderChips(); }
       knownPlace = known; renderSuggest();
       return;
     }
     const name = await placeName(pos.lat, pos.lon, pos.acc);
-    if (name && stillValid()) $('note').value = name;
+    if (name && stillValid()){ $('note').value = name; noteSource = 'location'; }
   } catch (e) {
     if (e && e.code === 1 && run === locRun) toast('Standortzugriff verweigert – in den iOS-Einstellungen erlauben');
   } finally {
@@ -540,7 +541,10 @@ $('suggest').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   amountStr = b.dataset.a; renderAmount(); renderSuggest();
 };
-$('note').addEventListener('input', () => { locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; });
+/* Woher die Notiz kommt: '' leer, 'location' Standort, 'receipt' Bon/Screenshot, 'user' selbst getippt.
+   Rangfolge beim Überschreiben: user > receipt > location */
+let noteSource = '';
+$('note').addEventListener('input', () => { noteSource = $('note').value.trim() ? 'user' : ''; locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; });
 
 $('locToggle').onchange = async e => {
   state.loc = e.target.checked; save();

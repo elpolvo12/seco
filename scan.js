@@ -231,7 +231,8 @@ function applyText(text){
   if (receipt.amount) amountStr = String(Math.round(receipt.amount));
   renderAmount(); renderSuggest();
   if (receipt.date) $('date').value = receipt.date;
-  if (receipt.store && !$('note').value.trim()){ locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; $('note').value = receipt.store; }
+  // Name vom Bon ersetzt einen automatisch eingetragenen Ort, aber nie selbst Getipptes
+  if (receipt.store && noteSource !== 'user'){ locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; $('note').value = receipt.store; noteSource = 'receipt'; }
   const c = !catTouched && guessCat(receipt.store);
   if (c){ selCat = c; renderChips(); renderSuggest(); }
   const found = [receipt.amount && 'Betrag', receipt.date && 'Datum', receipt.store && 'Geschäft'].filter(Boolean);
