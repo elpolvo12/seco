@@ -460,11 +460,11 @@ function renderHero(key, total){
   set(1, isCur ? 'Monat' : 'Gesamt', eur.format(total), target ? (byBudget ? `von ${eur.format(target)}` : `Ø ${eur.format(target)}`) : 'ausgegeben');
   if (isCur){
     const left = dim - now.getDate();
-    set(2, 'Noch', left > 0 ? `${left} ${left === 1 ? 'Tag' : 'Tage'}` : 'Letzter Tag', `Ø ${eur.format(total / now.getDate())} / Tag`);
+    set(2, 'Noch', left > 0 ? `${left} ${left === 1 ? 'Tag' : 'Tage'}` : 'Letzter Tag', `Ø ${eur.format(total / now.getDate())}/Tag`);
     if (f.projected == null) set(3, 'Prognose', '–', 'zu früh');
     else if (!target) set(3, 'Prognose', eur.format(f.projected), 'Monatsende');
     else if (f.projected > target) set(3, 'Prognose', eur.format(f.projected), `▲ +${eur.format(f.projected - target)}`, 'bad');
-    else set(3, 'Prognose', eur.format(f.projected), '✓ im Budget', 'good');
+    else set(3, 'Prognose', eur.format(f.projected), '✓ im Plan', 'good');
   } else {
     set(2, 'Ø pro Tag', eur.format(total / dim), 'im Monat');
     if (!target) set(3, 'Budget', '–', 'nicht gesetzt');
@@ -863,7 +863,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.53';
+const APP_VERSION = '1.54';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);

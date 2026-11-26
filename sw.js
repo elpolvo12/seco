@@ -1,5 +1,5 @@
 // Version: bei jeder Änderung hier, in app.js (APP_VERSION) und in version.json erhöhen.
-const VERSION = '1.53';
+const VERSION = '1.54';
 const CACHE = 'seco-' + VERSION;
 const FILES = ['./','index.html','style.css','app.js','scan.js','icons.js','analytics.js','manifest.webmanifest','icons/icon-180.png','icons/icon-192.png','icons/icon-512.png'];
 // Beim Installieren frisch vom Server holen (HTTP-Cache umgehen)

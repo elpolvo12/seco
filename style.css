@@ -103,7 +103,7 @@ svg.ci{fill:currentColor;stroke:none}
 /* Karte im Kartenformat (ISO/IEC 7810 ID-1: 85,6 × 54 mm = 1,586 : 1) */
 /* Karte: der Seco-Hologramm-Verlauf als Fläche; Logo oben rechts */
 @property --hp{syntax:'<number>';inherits:true;initial-value:0}
-.heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:flex-start;border-radius:22px;padding:17px 22px 20px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
+.heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 18px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
   background-color:#3a2f9a;
   background-image:linear-gradient(115deg,#1f7391 0%,#3d33a3 24%,#9b2f82 48%,#a2693a 68%,#1f836a 86%,#1f7391 100%);
   background-size:240% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1%) 0;animation:holoFlow 12s ease-in-out infinite alternate}
@@ -118,14 +118,14 @@ svg.ci{fill:currentColor;stroke:none}
 .ringO{display:inline-block;width:.57em;height:.57em;border-radius:50%;margin-left:.025em;
   background-image:linear-gradient(135deg,#79e2ff,#b79bff 30%,#ff97cf 55%,#ffd29a 78%,#9dffd2);background-size:220% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1.4%) 0;
   -webkit-mask:radial-gradient(circle closest-side,transparent 54%,#000 56%);mask:radial-gradient(circle closest-side,transparent 54%,#000 56%)}
-.hcNum{font-family:var(--font-num);font-size:50px;line-height:44px;padding-top:2px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hcNum{font-family:var(--font-num);font-size:52px;line-height:46px;padding-top:2px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hcSub{display:flex;justify-content:space-between;gap:10px;font-size:14px;line-height:17px;font-weight:500;color:var(--hc-fg2);margin-top:4px}
-.hcBar{height:4px;border-radius:2px;background:var(--hc-line);margin:0 0 14px;overflow:hidden}
+.hcBar{height:4px;border-radius:2px;background:var(--hc-line);margin:0 0 12px;overflow:hidden}
 .hcBar i{display:block;height:100%;border-radius:2px;background:var(--hc-fg);transition:width .5s var(--ease),background .3s}
 .hcBar i.warn{background:var(--hc-warn)}
 .hcBar i.over{background:var(--hc-bad)}
-.hcCols{display:grid;grid-template-columns:repeat(3,1fr)}
-.hcCols > div{min-width:0;padding:0 12px;border-left:.5px solid var(--hc-line)}
+.hcCols{display:grid;grid-template-columns:.85fr 1fr 1.2fr}
+.hcCols > div{min-width:0;padding:0 9px;border-left:.5px solid var(--hc-line)}
 .hcCols > div:first-child{padding-left:0;border-left:0}
 .hcCols small{display:block;font-size:12px;line-height:15px;font-weight:500;color:var(--hc-fg2)}
 .hcCols b{display:block;font-family:var(--font-num);font-size:17px;line-height:22px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -423,11 +423,10 @@ b,strong{font-weight:500}
 
 /* Karte: Beschriftungen in Großbuchstaben (Zahlen bleiben) */
 .hcTop #hcDate,.hcSub,.hcCols small,.hcCols em{text-transform:uppercase;letter-spacing:.06em}
-.hcTop #hcDate{font-size:12px}
-.hcSub{font-size:12px}
-.hcCols small,.hcCols em{font-size:10.5px;letter-spacing:.03em}
+.hcTop #hcDate{font-size:12px;letter-spacing:.04em}
+.hcSub{font-size:12px;letter-spacing:.04em}
+.hcCols small,.hcCols em{font-size:10px;letter-spacing:.015em}
 
-/* Karte: Abstände einzeln gesetzt, damit die sichtbaren Lücken gleich groß sind (~16 px) */
-.hcMain{margin-top:8px}
-.hcSub{margin-top:10px}
-.hcMain + div{margin-top:auto}
+/* Karte: drei Blöcke gleichmäßig verteilt (unabhängig von der Schrift) */
+.hcMain{margin-top:0}
+.hcSub{margin-top:6px;line-height:16px}
