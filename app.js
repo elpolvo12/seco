@@ -272,12 +272,28 @@ $('keypad').onclick = e => {
   renderAmount(); renderSuggest();
   const el = $('amountDisplay'); el.classList.add('bump'); setTimeout(() => el.classList.remove('bump'), 100);
 };
+/* Kategorie für alle Ausgaben mit gleichem Namen übernehmen (inkl. gemerkter Orte) */
+const sameName = (a, b) => !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
+function applyCatToName(name, cat, except){
+  const changed = state.items.filter(i => i !== except && sameName(i.note, name) && i.cat !== cat).map(i => [i, i.cat]);
+  changed.forEach(([i]) => i.cat = cat);
+  (state.places || []).forEach(p => { if (sameName(p.name, name)) p.cat = cat; });
+  return changed;
+}
+function toastCatChange(name, catId, changed){
+  if (!changed.length) return false;
+  toast(`Kategorie „${cat(catId).name}“ für ${changed.length + 1}× „${name}“`, 'Rückgängig', () => {
+    changed.forEach(([i, old]) => i.cat = old); save(); render();
+  });
+  return true;
+}
 $('expSave').onclick = () => {
   const amount = parseNum(amountStr);
   if (!(amount > 0)){ const el = $('amountDisplay'); el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); return; }
   const data = {amount, cat:selCat, note:$('note').value.trim(), date:$('date').value || iso(new Date())};
   const key = data.date.slice(0,7);
   const before = sum(ofMonth(key));
+  const oldCat = editing ? editing.cat : null;
   if (editing) Object.assign(editing, data);
   else { state.items.push({id: Date.now(), ...data}); if (here) rememberPlace(here, data); }
   save();
@@ -288,6 +304,10 @@ $('expSave').onclick = () => {
   const after = sum(ofMonth(key)), b = state.budget;
   if (b && before <= b && after > b) toast(`⚠️ Monatsbudget überschritten (${eur.format(after - b)} drüber)`);
   else if (b && before < .8*b && after >= .8*b) toast(`⚠️ 80 % des Budgets erreicht`);
+  else if (editing && oldCat !== data.cat && data.note){
+    const changed = applyCatToName(data.note, data.cat, editing);
+    if (changed.length){ save(); render(); toastCatChange(data.note, data.cat, changed); }
+  }
   else if (!editing) toast(`${eur.format(amount)} gespeichert`);
 };
 $('expDelete').onclick = () => { if (editing){ const id = editing.id; closeSheet('expenseSheet'); removeItem(id); } };
@@ -618,7 +638,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.18';
+const APP_VERSION = '1.19';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);

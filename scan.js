@@ -424,6 +424,11 @@ $('importList').onchange = e => {
     if (!(n > 0 && n <= MAX_AMOUNT)) toast('Nur Beträge von 1 bis 1000 €');
     renderImport();
   } else if (f === 'date'){ if (e.target.value){ r.date = e.target.value; r.dateGuess = false; r.dup = isDuplicate(r); } renderImport(); }
+  else if (f === 'cat'){
+    // gleiche Namen in der Liste mitändern; beim Hinzufügen auch für gespeicherte Ausgaben übernehmen
+    importRows.forEach(x => { if (x === r || sameName(x.name, r.name)){ x.cat = e.target.value; x.catChanged = true; } });
+    renderImport();
+  }
   else { r[f] = e.target.value.trim(); if (f === 'name' && r.name && !r.on && !r.dup){ r.on = true; renderImport(); } }
 };
 $('importSave').onclick = () => {
@@ -431,12 +436,16 @@ $('importSave').onclick = () => {
   let id = Date.now();
   const ids = new Set();
   rows.forEach(r => { ids.add(id); state.items.push({id: id++, amount: r.amount, cat: r.cat, note: r.name, date: r.date}); });
+  const catUndo = [];
+  rows.filter(r => r.catChanged && r.name).forEach(r => catUndo.push(...applyCatToName(r.name, r.cat).filter(([i]) => !ids.has(i.id))));
   save(); closeSheet('importSheet');
   const last = rows.map(r => r.date).sort().pop();
   if (last){ const [y, m] = last.split('-').map(Number); view = new Date(y, m - 1, 1); }
   render();
   toast(`${rows.length} Ausgabe${rows.length === 1 ? '' : 'n'} hinzugefügt`, 'Rückgängig', () => {
-    state.items = state.items.filter(i => !ids.has(i.id)); save(); render();
+    state.items = state.items.filter(i => !ids.has(i.id));
+    catUndo.forEach(([i, old]) => i.cat = old);
+    save(); render();
   });
 };
 
