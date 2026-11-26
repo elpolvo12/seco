@@ -640,13 +640,13 @@ $('homeClear').onclick = () => { state.home = null; save(); renderSettings(); to
 
 /* ---------- Toast ---------- */
 let toastTimer;
-function toast(text, actionLabel = '', action = null){
+function toast(text, actionLabel = '', action = null, ms = 0){
   $('toastText').textContent = text;
   $('toastAction').textContent = actionLabel;
   $('toastAction').onclick = () => { action?.(); $('toast').classList.remove('show'); };
   $('toast').classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $('toast').classList.remove('show'), actionLabel ? 5000 : 2500);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), ms || (actionLabel ? 5000 : 2500));
 }
 
 /* ---------- Start ---------- */
@@ -660,7 +660,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.22';
+const APP_VERSION = '1.23';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
@@ -675,12 +675,20 @@ async function checkUpdate(manual){
   $('updateLabel').textContent = has ? `Version ${latestVersion} installieren` : latestVersion ? 'Aktuell ✓' : 'Nach Update suchen';
   $('updateState').textContent = has ? '›' : '';
   $('updateCheck').classList.toggle('add', !!has);
-  if (has) toast(`Neue Version ${latestVersion} verfügbar`, 'Aktualisieren', applyUpdate);
+  if (has){
+    // Automatisch aktualisieren, wenn gerade nichts offen ist (und nicht schon eben für diese Version versucht)
+    const sheetOpen = !!document.querySelector('.sheetWrap.open');
+    let tried = null; try { tried = JSON.parse(localStorage.getItem('seco.updTry')); } catch {}
+    const recentlyTried = tried && tried.v === latestVersion && Date.now() - tried.t < 120000;
+    if (!manual && !sheetOpen && !recentlyTried) return applyUpdate(), has;
+    toast(`Neue Version ${latestVersion} verfügbar`, 'Aktualisieren', applyUpdate, 15000);
+  }
   else if (manual && !latestVersion) toast('Keine Verbindung – später nochmal versuchen');
   return has;
 }
 async function applyUpdate(){
   toast('Wird aktualisiert …');
+  try { localStorage.setItem('seco.updTry', JSON.stringify({v: latestVersion, t: Date.now(), from: APP_VERSION})); } catch {}
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
     await reg?.update();
@@ -694,6 +702,14 @@ $('updateCheck').onclick = async () => {
   checkUpdate(true);
 };
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+// Nach einem Update kurz bestätigen
+try {
+  const tried = JSON.parse(localStorage.getItem('seco.updTry'));
+  if (tried && tried.from !== APP_VERSION && Date.now() - tried.t < 120000){
+    toast(`Aktualisiert auf Version ${APP_VERSION}`);
+    localStorage.removeItem('seco.updTry');
+  }
+} catch {}
 checkUpdate(false);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(false); });
 render();
