@@ -140,13 +140,13 @@ svg.ci{fill:currentColor;stroke:none}
 .day{font-size:13px;line-height:18px;color:var(--sub);text-transform:uppercase;margin:22px 16px 7px;display:flex;justify-content:space-between}
 .swipe{position:relative;overflow:hidden}
 .swipe:not(:last-child)::after{content:"";position:absolute;left:62px;right:0;bottom:0;border-bottom:.5px solid var(--sep);pointer-events:none}
-.swipeDel{position:absolute;inset:0 0 0 auto;width:88px;background:var(--red);color:#fff;border:0;font-weight:500;display:flex;align-items:center;justify-content:center;transition:width .3s var(--ease)}
+.swipeDel{position:absolute;inset:0 0 0 auto;width:88px;background:var(--red);color:#fff;border:0;font-weight:500;display:flex;align-items:center;justify-content:center;opacity:0;transition:width .3s var(--ease),opacity .25s}
 .swipe.dragging .swipeDel{transition:none}
 .swipe.dragging .row{transition:none}
 .swipe.full .swipeDel{justify-content:flex-start;padding-left:22px}
 .swipe.collapse{transition:height .25s var(--ease)}
 .row{position:relative;display:flex;align-items:center;gap:12px;padding:11px 16px;background:var(--card);touch-action:pan-y;transition:transform .3s var(--ease)}
-.row:active{background:var(--fill3)}
+.row:active{background:linear-gradient(var(--fill3),var(--fill3)),var(--card)}
 /* Kategorie-Symbol: farbiges Quadrat wie in den iOS-Einstellungen */
 /* Kategorie-Symbol: Icon in Kategorie-Farbe, ohne Hintergrund */
 .ico{width:30px;height:30px;display:grid;place-items:center;flex:none;color:var(--c)}
@@ -237,7 +237,7 @@ svg.ci{fill:currentColor;stroke:none}
 /* ---------- Einstellungen ---------- */
 .cell{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:48px;padding:10px 16px;background:none;border:0;border-bottom:.5px solid var(--sep);text-align:left}
 .cell:last-child{border-bottom:0}
-.cell.action:active{background:var(--fill3)}
+.cell.action:active{background:linear-gradient(var(--fill3),var(--fill3)),var(--card)}
 .cell.danger{color:var(--red)}
 .cell.add{color:var(--blue)}
 .cell:disabled{opacity:.4}

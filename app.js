@@ -210,7 +210,9 @@ let drag = null, openRow = null;
 const delBtn = row => row.parentElement.querySelector('.swipeDel');
 const setX = (row, x) => {
   row.style.transform = x ? `translateX(${x}px)` : '';
-  delBtn(row).style.width = Math.max(88, -x) + 'px';
+  const del = delBtn(row);
+  del.style.width = Math.max(88, -x) + 'px';
+  del.style.opacity = x ? '1' : '0';   // Löschen nur sichtbar, wenn die Zeile verschoben ist
 };
 const closeOpen = () => { if (openRow){ setX(openRow, 0); openRow = null; } };
 $('list').addEventListener('pointerdown', e => {
@@ -833,7 +835,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.31';
+const APP_VERSION = '1.32';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
