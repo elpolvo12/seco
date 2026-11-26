@@ -127,6 +127,29 @@ const BankParser = (() => {
   }
   const isNameLike = s => (s.match(/\p{L}/gu) || []).length >= 3;
 
+  // Live Text kopiert manchmal erst die ganze linke Spalte (Datum, Name), dann die rechte (Betrag, Kategorie)
+  function parseColumns(lines, today){
+    const names = [], amts = [];
+    let curDate = null;
+    for (const line of lines){
+      if (BALANCE.test(line)) continue;
+      const m = line.match(AMT);
+      const d = dateOf(line, today);
+      if (m){
+        const own = cleanName(line.slice(0, m.index + m[1].length).replace(/(?<!\d)\d{1,2}\.\d{1,2}\.(\d{2,4})?/, ''));
+        if (isNameLike(own)) return null;                       // Name steht beim Betrag -> keine Spalten
+        amts.push({sign: m[2] ? (m[2] === '+' ? '+' : '-') : '', amount: parseFloat(m[3].replace(/[.\s]/g, '') + '.' + m[4]), hasCurrency: !!m[5]});
+        continue;
+      }
+      if (d){ curDate = d; continue; }
+      const n = cleanName(line);
+      if (BANK_CAT_LINE.test(n)){ const last = amts[amts.length - 1]; if (last && !last.bankCat) last.bankCat = n; continue; }
+      if (isNameLike(n)) names.push({name: n, date: curDate});
+    }
+    if (amts.length < 2 || names.length !== amts.length) return null;
+    return amts.map((a, i) => ({...a, name: names[i].name, date: names[i].date}));
+  }
+
   function parse(text, today = new Date()){
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const raw = [];
@@ -164,6 +187,11 @@ const BankParser = (() => {
       pendingName = '';
     }
     closeBlock();
+    // Fehlen Namen, aber passt die Spalten-Zuordnung genau, diese nehmen
+    if (raw.some(r => !r.name)){
+      const cols = parseColumns(lines, today);
+      if (cols) raw.splice(0, raw.length, ...cols);
+    }
     const firstDated = raw.find(r => r.date);
     raw.forEach(r => { if (!r.date && firstDated){ r.date = firstDated.date; r.dateGuess = true; } });
     const minus = raw.filter(r => r.sign === '-').length;
@@ -171,8 +199,7 @@ const BankParser = (() => {
       .filter(r => r.sign !== '+')                             // Plus (Gutschriften) immer ignorieren
       .filter(r => minus ? r.sign === '-' : true)              // gibt es Minus-Beträge, nur diese
       .filter(r => r.amount > 0 && r.amount <= MAX_AMOUNT)     // > 1000 € ignorieren
-      .filter(r => r.name)
-      .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today), dateGuess: !!r.dateGuess || !r.date, bankCat: r.bankCat || ''}))
+      .map(r => ({name: r.name || '', amount: Math.round(r.amount), date: r.date || iso(today), dateGuess: !!r.dateGuess || !r.date, bankCat: r.bankCat || ''}))
       .filter(r => r.amount > 0);
     const signed = raw.filter(r => r.sign).length;
     const looksLikeBank = raw.length >= 2 && (signed >= 2 || dateHeaders >= 1 || raw.filter(r => r.hasCurrency).length >= 2);
@@ -314,14 +341,15 @@ $('pasteGo').onclick = () => {
 /* ---------- Mehrere Ausgaben aus Screenshot prüfen & übernehmen ---------- */
 let importRows = [];
 function isDuplicate(r){
-  const n = r.name.toLowerCase();
+  const n = (r.name || '').toLowerCase();
+  if (!n) return false;
   return state.items.some(i => i.date === r.date && Math.round(i.amount) === r.amount
     && (!i.note || i.note.toLowerCase().includes(n.slice(0, 5)) || n.includes(i.note.toLowerCase().slice(0, 5))));
 }
 function completeNames(entries){
   const known = [...new Set([...entries.map(e => e.name), ...state.items.map(i => i.note).filter(Boolean)])];
   entries.forEach(e => {
-    if (e.name.length < 5) return;
+    if (!e.name || e.name.length < 5) return;
     const n = e.name.toLowerCase();
     const longer = known.filter(k => k.length > e.name.length && k.toLowerCase().startsWith(n)).sort((a, b) => a.length - b.length)[0];
     if (longer) e.name = longer;
@@ -332,7 +360,7 @@ function openImport(entries){
   completeNames(entries);
   importRows = entries.map(e => {
     const dup = isDuplicate(e);
-    return {...e, cat: guessCat(e.name, e.bankCat) || (state.cats.find(c => c.id === 'other') || state.cats[0]).id, on: !dup, dup};
+    return {...e, cat: guessCat(e.name, e.bankCat) || (state.cats.find(c => c.id === 'other') || state.cats[0]).id, on: !dup && !!e.name, dup};
   });
   renderImport();
   openSheet('importSheet');
@@ -343,7 +371,7 @@ function renderImport(){
     <div class="imp ${r.on ? '' : 'off'}" data-i="${i}">
       <button class="check ${r.on ? 'on' : ''}" data-act="toggle" aria-label="Übernehmen"></button>
       <div class="impBody">
-        <input class="impName" data-f="name" value="${esc(r.name)}" autocomplete="off">
+        <input class="impName" data-f="name" value="${esc(r.name)}" placeholder="Name fehlt – bitte eintragen" autocomplete="off">
         <div class="impMeta">
           <select data-f="cat">${catOpts(r.cat)}</select>
           <label class="impDate ${r.dateGuess ? 'guess' : ''}">${r.dateGuess ? '? ' : ''}${new Date(r.date + 'T12:00').toLocaleDateString('de-DE', {day:'numeric', month:'short'})}<input type="date" data-f="date" value="${r.date}"></label>
@@ -370,7 +398,7 @@ $('importList').onchange = e => {
     if (!(n > 0 && n <= MAX_AMOUNT)) toast('Nur Beträge von 1 bis 1000 €');
     renderImport();
   } else if (f === 'date'){ if (e.target.value){ r.date = e.target.value; r.dateGuess = false; r.dup = isDuplicate(r); } renderImport(); }
-  else r[f] = e.target.value.trim();
+  else { r[f] = e.target.value.trim(); if (f === 'name' && r.name && !r.on && !r.dup){ r.on = true; renderImport(); } }
 };
 $('importSave').onclick = () => {
   const rows = importRows.filter(r => r.on && r.amount > 0);
