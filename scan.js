@@ -84,24 +84,24 @@ const BANK_CATS = [
   [/wohnen|miete|haushalt|energie|strom|nebenkosten|versicherung|internet|telefon|mobilfunk|telekommunikation|m[öo]bel|garten|baumarkt/i, 'home'],
   [/streaming|unterhaltung|freizeit|kultur|sport|hobby|urlaub|hotel|medien|abo(nnement)?s?\b|spiele|kino/i, 'fun'],
   [/shopping|kleidung|mode\b|elektronik|online.?shopping|einkaufen|geschenke/i, 'shop'],
-  [/dienstleistung(en)?|sonstiges?|geb[uü]hren|bargeld|bildung|spenden|steuern|kinder|haustiere/i, 'other'],
+  [/dienstleistung(en)?|sonstiges?|geb[uü]hren|bargeld|geldautomat|bildung|spenden|steuern|kinder|haustiere/i, 'other'],
 ];
 // Typische Kategorie-Bezeichnungen der Banking-Apps (als ganze Zeile)
 const BANK_CAT_LABELS = ['gastronomie','restaurants?','lebensmittel','supermarkt','shopping','streaming','hobby','hobbys','dienstleistungen',
   'tank-?\\s*(&|und)\\s*ladestelle','tankstelle','tanken','mobilit[aä]t','verkehr','[öo]ffentliche verkehrsmittel','[öo]pnv','auto','parken','taxi',
   'gesundheit','drogerie','k[öo]rperpflege','beauty','wohnen','miete','haushalt','energie','versicherungen?','telekommunikation','internet',
   'freizeit','unterhaltung','kultur','sport','reisen','urlaub','hotel','medien','abonnements?','kleidung','mode','elektronik','geschenke',
-  'sonstiges','geb[uü]hren','bargeld','bildung','spenden','steuern','kinder','haustiere','lieferdienste?','caf[eé]s?','bars?','m[öo]bel','garten','baumarkt'];
+  'sonstiges','geb[uü]hren','bargeld','geldautomat','bargeldabhebung','barauszahlung','bildung','spenden','steuern','kinder','haustiere','lieferdienste?','caf[eé]s?','bars?','m[öo]bel','garten','baumarkt'];
 const BANK_CAT_LINE = new RegExp('^(' + BANK_CAT_LABELS.join('|') + ')$', 'i');
 // "Einkauf Hobby", "Lastschrift Versicherungen": Buchungsart + Kategorie
-const TYPE_CAT = /^\s*(einkauf|kartenzahlung|lastschrift|basislastschrift|[üu]berweisung|dauerauftrag|gutschrift)\s+(.{3,30})$/i;
+const TYPE_CAT = /^\s*(einkauf|kartenzahlung|lastschrift|basislastschrift|[üu]berweisung|dauerauftrag|gutschrift|bargeldabhebung|barauszahlung|auszahlung)\s+(.{3,30})$/i;
 
 /* Banking-Screenshot: Liste von Umsätzen mit Datumsüberschriften */
 const BankParser = (() => {
   const MONTHS = {jan:1, feb:2, mär:3, mae:3, mar:3, apr:4, mai:5, jun:6, jul:7, aug:8, sep:9, okt:10, oct:10, nov:11, dez:12, dec:12};
   // Betrag mit optionalem Vorzeichen und €/EUR; OCR liest das Minus oft als – oder ~
   const AMT = /(^|[^\d,.])([+\-−–—~]?)\s?(\d{1,3}(?:[.\s]\d{3})+|\d{1,5})\s?,\s?(\d{2})(?!\d)\s?(€|eur\b|e\b)?/i;
-  const NOISE = /\b(kartenzahlung|lastschrift|sepa|basislastschrift|überweisung|ueberweisung|dauerauftrag|gutschrift|visa|mastercard|debit|girocard|apple\s*pay|google\s*pay|kartenumsatz|umsatz|vorgemerkt|ausstehend|abgeschlossen|einkauf)\b/gi;
+  const NOISE = /\b(kartenzahlung|lastschrift|sepa|basislastschrift|überweisung|ueberweisung|dauerauftrag|gutschrift|visa|mastercard|debit|girocard|apple\s*pay|google\s*pay|kartenumsatz|umsatz|vorgemerkt|ausstehend|abgeschlossen|einkauf|bargeldabhebung|barauszahlung|auszahlung|bargeldauszahlung)\b/gi;
   const BALANCE = /(kontostand|saldo|verf[uü]gbar|guthaben|dispo|gesamtbetrag|alle\s*ums)/i;
 
   function dateOf(line, today){
@@ -222,6 +222,7 @@ const BankParser = (() => {
       .filter(r => r.sign !== '+')                             // Plus (Gutschriften) immer ignorieren
       .filter(r => minus ? r.sign === '-' : true)              // gibt es Minus-Beträge, nur diese
       .filter(r => r.amount > 0 && r.amount <= MAX_AMOUNT)     // > 1000 € ignorieren
+      .map(r => (/geldautomat|bargeld/i.test(r.bankCat || '') && (!r.name || /\d{3,}/.test(r.name)) ? {...r, name: 'Bargeld'} : r))
       .map(r => ({name: r.name || '', amount: Math.round(r.amount), date: r.date || iso(today), dateGuess: !!r.dateGuess || !r.date, bankCat: r.bankCat || ''}))
       .filter(r => r.amount > 0);
     const signed = raw.filter(r => r.sign).length;

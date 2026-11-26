@@ -638,7 +638,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.19';
+const APP_VERSION = '1.20';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
