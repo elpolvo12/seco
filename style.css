@@ -19,6 +19,7 @@
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#1b8a3f; --neg:#d63a30;
+  --tab1:#0b8fc0; --tab2:#7a4be0; --tab3:#d4338a;
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
@@ -40,6 +41,7 @@
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
+  --tab1:#64d2ff; --tab2:#bf9bff; --tab3:#ff8fc8;
   --scrim:rgba(0,0,0,.55);
 }
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{
@@ -52,6 +54,7 @@
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
+  --tab1:#64d2ff; --tab2:#bf9bff; --tab3:#ff8fc8;
   --scrim:rgba(0,0,0,.55);
 }}
 
@@ -204,7 +207,12 @@ svg.ci{fill:currentColor;stroke:none}
 .tabs{display:flex;flex:1;max-width:340px;padding:4px;border-radius:999px;background:var(--glass);border:.5px solid var(--glass-edge);box-shadow:var(--glass-shadow);-webkit-backdrop-filter:blur(30px) saturate(1.8);backdrop-filter:blur(30px) saturate(1.8)}
 .tab{flex:1;background:none;border:0;border-radius:999px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--label2);font-size:10px;line-height:12px;font-weight:400;padding:7px 0 6px;transition:background .2s,color .2s}
 .tab .ci{width:24px;height:24px}
-.tab.active{background:var(--fill2);color:var(--blue)}
+.tab .ci{color:var(--tc);opacity:.72;transition:opacity .2s}
+.tab[data-view=home]{--tc:var(--tab1)}
+.tab[data-view=stats]{--tc:var(--tab2)}
+.tab[data-view=settings]{--tc:var(--tab3)}
+.tab.active{background:color-mix(in srgb,var(--tc) 16%,transparent);color:var(--tc)}
+.tab.active .ci{opacity:1}
 .addbtn{flex:none;width:56px;height:56px;border-radius:50%;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;box-shadow:0 8px 22px color-mix(in srgb,var(--blue) 45%,transparent);transition:transform .15s}
 .addbtn:active{transform:scale(.92)}
 .addbtn .ci{width:28px;height:28px}
