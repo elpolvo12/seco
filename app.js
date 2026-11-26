@@ -161,7 +161,7 @@ function syncCompactBar(){
 let holoRaf = 0;
 addEventListener('scroll', () => {
   $('compactBar').classList.toggle('show', scrollY > 48);
-  if (!holoRaf) holoRaf = requestAnimationFrame(() => { holoRaf = 0; $('hero').style.setProperty('--hx', (Math.sin(scrollY / 170) * 70).toFixed(1) + 'px'); });
+  if (!holoRaf) holoRaf = requestAnimationFrame(() => { holoRaf = 0; $('hero').style.setProperty('--hs', (Math.sin(scrollY / 170) * 30).toFixed(1)); });
 }, {passive: true});
 
 /* ---------- Übersicht ---------- */
@@ -864,7 +864,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.38';
+const APP_VERSION = '1.39';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
