@@ -148,12 +148,13 @@ svg.ci{fill:currentColor;stroke:none}
 .row{position:relative;display:flex;align-items:center;gap:12px;padding:11px 16px;background:var(--card);touch-action:pan-y;transition:transform .3s var(--ease)}
 .row:active{background:var(--fill3)}
 /* Kategorie-Symbol: farbiges Quadrat wie in den iOS-Einstellungen */
-.ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--c);color:#fff}
-.ico .ci{width:20px;height:20px}
-.ico.big{width:76px;height:76px;border-radius:19px}
-.ico.big .ci{width:42px;height:42px}
-.cell .ico{width:30px;height:30px;border-radius:8px}
-.cell .ico .ci{width:18px;height:18px}
+/* Kategorie-Symbol: Icon in Kategorie-Farbe, ohne Hintergrund */
+.ico{width:30px;height:30px;display:grid;place-items:center;flex:none;color:var(--c)}
+.ico .ci{width:26px;height:26px}
+.ico.big{width:76px;height:76px}
+.ico.big .ci{width:60px;height:60px}
+.cell .ico{width:28px;height:28px}
+.cell .ico .ci{width:24px;height:24px}
 .meta{flex:1;min-width:0}
 .meta b{display:block;font-weight:400}
 .meta small{display:block;color:var(--sub);font-size:15px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -268,8 +269,8 @@ button.tile:active{background:var(--fill2)}
 .tile.pos b::before{content:"";}
 /* Kategorie-Kachel */
 .catTile{background:color-mix(in srgb,var(--c) 14%,var(--card));padding-top:10px}
-.catTile .ico.sm{width:26px;height:26px;border-radius:7px;margin-bottom:4px}
-.catTile .ico.sm .ci{width:15px;height:15px}
+.catTile .ico.sm{width:26px;height:26px;margin:0 0 4px -2px;color:var(--c)}
+.catTile .ico.sm .ci{width:24px;height:24px}
 .catTile .pct{position:absolute;top:10px;right:10px;font-size:11px;color:var(--sub)}
 .catTile .dl{color:var(--label2)}
 /* Wochentage */
@@ -309,7 +310,8 @@ button.tile:active{background:var(--fill2)}
 .tgHead{display:flex;align-items:center;gap:12px}
 .tgHead b{display:block;font-weight:600}
 .tgHead small{display:block;font-size:13px;color:var(--sub);line-height:18px}
-.tgHead .ico{width:38px;height:38px;border-radius:10px}
+.tgHead .ico{width:36px;height:36px}
+.tgHead .ico .ci{width:32px;height:32px}
 .tgBtn{border:0;border-radius:999px;padding:12px 18px;background:var(--green);color:#fff;font-weight:600;font-family:var(--font-num)}
 .tgBtn:active{opacity:.8}
 .saveAmount{text-align:center;font-family:var(--font-num);font-size:44px!important;font-weight:700;padding:14px!important}
