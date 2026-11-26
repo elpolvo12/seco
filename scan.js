@@ -254,7 +254,7 @@ function guessCat(storeName, bankCat){
   const s = storeName.toLowerCase();
   const prev = state.items.slice().reverse().find(i => i.note && (i.note.toLowerCase().includes(s) || s.includes(i.note.toLowerCase())));
   if (prev && state.cats.some(c => c.id === prev.cat)) return prev.cat;
-  if (/^bargeld$/i.test(storeName.trim())){                    // Bargeld -> Tanzen
+  if (/^bargeld$/i.test(storeName.trim()) || DANCE.test(storeName)){   // Bargeld & Tanz-Orte -> Tanzen
     const t = state.cats.find(c => /^tanzen$/i.test(c.name));
     if (t) return t.id;
   }

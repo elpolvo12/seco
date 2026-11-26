@@ -54,6 +54,16 @@ if (!state.migDance){
   state.items.forEach(i => { if (/^bargeld$/i.test((i.note || '').trim())) i.cat = t.id; });
   state.migDance = true; save();
 }
+// Einmalig: Tanz-Orte (Tangoloft, Tanzschule …) nach Tanzen
+const DANCE = /tangoloft|tanz|tango|milonga|salsa|swing\s*dance|ballett/i;
+if (!state.migDance2){
+  const t = state.cats.find(c => /^tanzen$/i.test(c.name));
+  if (t){
+    state.items.forEach(i => { if (DANCE.test(i.note || '')) i.cat = t.id; });
+    (state.places || []).forEach(p => { if (DANCE.test(p.name || '')) p.cat = t.id; });
+  }
+  state.migDance2 = true; save();
+}
 
 /* ---------- Helfer ---------- */
 const $ = id => document.getElementById(id);
@@ -650,7 +660,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.21';
+const APP_VERSION = '1.22';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
