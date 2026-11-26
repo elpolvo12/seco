@@ -42,6 +42,18 @@ function roundAll(st){
   return st;
 }
 if (!state.wholeEuros){ roundAll(state); state.wholeEuros = true; save(); }
+// Einmalig: Kategorie "Tanzen" anlegen und Bargeld dorthin
+if (!state.migDance){
+  let t = state.cats.find(c => /^tanzen$/i.test(c.name));
+  if (!t){
+    const used = new Set(state.cats.map(c => c.c));
+    const slot = [4, 6, 2, 0, 1, 3, 5, 7].find(i => !used.has(i)) ?? 4;
+    t = {id: 'dance', name: 'Tanzen', ico: '💃', c: slot};
+    state.cats.push(t);
+  }
+  state.items.forEach(i => { if (/^bargeld$/i.test((i.note || '').trim())) i.cat = t.id; });
+  state.migDance = true; save();
+}
 
 /* ---------- Helfer ---------- */
 const $ = id => document.getElementById(id);
@@ -638,7 +650,7 @@ darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.20';
+const APP_VERSION = '1.21';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
