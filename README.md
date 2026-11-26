@@ -16,6 +16,9 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 - **Betragsvorschläge:** bis zu 3 passende Beträge je nach Ort und Kategorie (häufig + kürzlich gewichtet)
 - **Beleg oder Screenshot scannen:** Kamera-Taste im Eingabefenster. Kassenbon → Betrag, Datum, Geschäft. Banking-Screenshot → alle Abbuchungen als Liste zum Prüfen (Plus-Beträge/Gutschriften und Kontostand werden ignoriert, bereits erfasste Ausgaben erkannt). Texterkennung mit Tesseract direkt auf dem Gerät
 - **Text einfügen (Live Text):** Text im Foto/Screenshot mit der iPhone-Texterkennung kopieren („Alle kopieren“) und in Seco auf das Klemmbrett-Symbol tippen – genauer und ohne Download
+- **Kacheln statt Diagramme:** Startseite mit Gespart-, Kategorie- und Kennzahlen-Kacheln; Statistik mit Kalender-Heatmap (Tag antippen), Wochentag-, Monats-, Kategorie- und Läden-Kacheln
+- **Gespart & Tagesgeld:** Tagesbudget minus Ausgaben für Heute / Woche / Monat; die Tagesgeld-Karte schlägt den Überweisungsbetrag vor und vermerkt Überweisungen (mit Rückgängig)
+- **Liste zum Aufklappen:** „Alle Ausgaben“ unten auf der Startseite; Kategorie-Kachel antippen filtert die Liste
 - **Heute noch X €:** Tagesbudget aus Monatsbudget (sonst Ø der letzten Monate) und verbleibenden Tagen
 - **Prognose:** Monatsende-Schätzung auf der Startseite und als gestrichelte Linie im Verlaufs-Diagramm (Statistik), mit Vormonat zum Vergleich
 - **Favoriten:** häufigste Ausgaben als Tasten – ein Tipp speichert sofort (gedrückt halten blendet aus)

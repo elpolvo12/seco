@@ -37,18 +37,33 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
     <button class="linkbtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
   </div>
 
-  <div class="card" id="catCard" hidden>
-    <div class="stack" id="bar"></div>
-    <div class="legend" id="legend"></div>
+  <div id="saveSec">
+    <h3 class="sectionTitle">Gespart</h3>
+    <div class="tiles" id="saveTiles"></div>
+    <div id="tgCard"></div>
+  </div>
+
+  <div id="catSec" hidden>
+    <h3 class="sectionTitle">Kategorien</h3>
+    <div class="tiles" id="catTiles"></div>
+  </div>
+
+  <div id="kpiSec" hidden>
+    <h3 class="sectionTitle">Auswertung</h3>
+    <div class="tiles" id="kpiTiles"></div>
   </div>
 
   <div class="favs" id="favs" hidden></div>
 
-  <div class="search"><svg class="ci" viewBox="0 0 32 32" aria-hidden="true"><path d="M29,27.5859l-7.5521-7.5521a11.0177,11.0177,0,1,0-1.4141,1.4141L27.5859,29ZM4,13a9,9,0,1,1,9,9A9.01,9.01,0,0,1,4,13Z"/></svg>
+  <button class="listToggle" id="listToggle" aria-expanded="false" aria-controls="listWrap">
+    <span>Alle Ausgaben <em id="listCount"></em></span><svg class="ci" viewBox="0 0 32 32" aria-hidden="true"><path d="M22 16 12 26 10.6 24.6 19.2 16 10.6 7.4 12 6z"/></svg>
+  </button>
+  <div id="listWrap" hidden>
+    <div class="search"><svg class="ci" viewBox="0 0 32 32" aria-hidden="true"><path d="M29,27.5859l-7.5521-7.5521a11.0177,11.0177,0,1,0-1.4141,1.4141L27.5859,29ZM4,13a9,9,0,1,1,9,9A9.01,9.01,0,0,1,4,13Z"/></svg>
     <input id="search" type="search" placeholder="Suchen (alle Monate)" autocomplete="off" enterkeyhint="search">
   </div>
-
-  <div id="list"></div>
+    <div id="list"></div>
+  </div>
 </section>
 
 <!-- STATISTIK -->
@@ -58,30 +73,31 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
     <h1 class="largeTitle monthTitle"></h1>
   </header>
 
-  <h3 class="sectionTitle">Verlauf im Monat</h3>
-  <div class="card chartCard">
-    <div class="tip" id="trendTip"></div>
-    <svg id="trendChart" class="chart" role="img" aria-label="Summe der Ausgaben im Verlauf des Monats, mit Prognose"></svg>
-    <div class="legend" id="trendLegend"></div>
+  <h3 class="sectionTitle">Kalender</h3>
+  <div class="card calCard">
+    <div class="calHead"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+    <div class="cal" id="calendar"></div>
+    <div class="dayDetail" id="dayDetail"></div>
+    <div class="calLegend"><span>weniger</span><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>mehr</span></div>
   </div>
 
-  <h3 class="sectionTitle">Letzte 6 Monate</h3>
-  <div class="card chartCard">
-    <div class="tip" id="barTip"></div>
-    <svg id="monthChart" class="chart" role="img" aria-label="Ausgaben der letzten sechs Monate"></svg>
+  <div id="wdSec" hidden>
+    <h3 class="sectionTitle">Wochentage <em>Ø pro Tag, letzte 3 Monate</em></h3>
+    <div class="tiles seven" id="weekdayTiles"></div>
   </div>
 
-  <h3 class="sectionTitle">Nach Kategorie</h3>
-  <div class="card" id="donutCard">
-    <div class="donutWrap">
-      <svg id="donut" viewBox="0 0 120 120" role="img" aria-label="Ausgaben nach Kategorie"></svg>
-      <div class="donutCenter"><b id="donutTotal"></b><small id="donutLabel">Gesamt</small></div>
-    </div>
-    <div id="catTable" class="table"></div>
+  <h3 class="sectionTitle">Monate</h3>
+  <div class="tiles" id="monthTiles"></div>
+
+  <div id="statCatSec" hidden>
+    <h3 class="sectionTitle">Kategorien</h3>
+    <div class="tiles" id="statCatTiles"></div>
   </div>
 
-  <h3 class="sectionTitle">Kennzahlen</h3>
-  <div class="kpis" id="kpis"></div>
+  <div id="placeSec" hidden>
+    <h3 class="sectionTitle">Läden &amp; Orte</h3>
+    <div class="tiles" id="placeTiles"></div>
+  </div>
 </section>
 
 <!-- EINSTELLUNGEN -->
@@ -229,6 +245,21 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
   </div>
 </div>
 
+<!-- SHEET: TAGESGELD -->
+<div class="sheetWrap" id="saveSheet">
+  <div class="backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheetHead">
+      <button class="linkbtn" data-close>Abbrechen</button>
+      <b>Tagesgeld</b>
+      <button class="linkbtn strong" id="saveGo">Vermerken</button>
+    </div>
+    <p class="importInfo" id="saveInfo"></p>
+    <div class="fields"><input id="saveAmount" class="saveAmount" type="text" inputmode="numeric" placeholder="0 €" autocomplete="off"></div>
+    <div class="card group" id="saveList"></div>
+  </div>
+</div>
+
 <!-- SHEET: KATEGORIE -->
 <div class="sheetWrap" id="catSheet">
   <div class="backdrop" data-close></div>
@@ -251,6 +282,7 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
 <div class="toast" id="toast"><span id="toastText"></span><button id="toastAction"></button></div>
 
 <script src="icons.js"></script>
+<script src="analytics.js"></script>
 <script src="app.js"></script>
 <script src="scan.js"></script>
 </body>

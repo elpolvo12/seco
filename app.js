@@ -159,13 +159,19 @@ function renderHome(){
   }
   renderInsights(key);
 
-  const byCat = groupByCat(month);
-  $('catCard').hidden = !byCat.length;
-  $('bar').innerHTML = byCat.map(([id,v]) => `<i style="flex-grow:${v};background:${color(cat(id).c)}" title="${esc(cat(id).name)}"></i>`).join('');
-  $('legend').innerHTML = byCat.map(([id,v]) => `<span style="--c:${color(cat(id).c)}">${esc(cat(id).name)} <b>${eur.format(v)}</b></span>`).join('');
+  const isCur = key === monthKey(new Date());
+  const sv = savingsSummary(key);
+  $('saveTiles').innerHTML = saveTilesHTML(sv);
+  $('tgCard').innerHTML = tgCardHTML(sv, key);
+  const ct = catTilesHTML(key, false), kt = kpiTilesHTML(key);
+  $('catTiles').innerHTML = ct; $('catSec').hidden = !ct;
+  $('kpiTiles').innerHTML = kt; $('kpiSec').hidden = !kt;
 
   const q = $('search').value.trim().toLowerCase();
   renderFavs(key, q);
+  $('listWrap').hidden = !state.listOpen;
+  $('listToggle').setAttribute('aria-expanded', state.listOpen ? 'true' : 'false');
+  $('listCount').textContent = `(${q ? state.items.filter(i => matches(i, q)).length : month.length})`;
   let list = q ? state.items.filter(i => matches(i, q)) : month;
   list = list.slice().sort((a,b) => b.date.localeCompare(a.date) || b.id - a.id);
 
@@ -501,140 +507,70 @@ $('favs').addEventListener('click', e => {
 });
 $('favs').addEventListener('contextmenu', e => e.preventDefault());
 
-/* ---------- Statistik ---------- */
+/* ---------- Statistik (Kacheln) ---------- */
+let selDay = null;
 function renderStats(){
-  renderTrend();
-  renderMonthChart();
-  renderDonut();
-  renderKpis();
+  const key = monthKey(view), now = new Date();
+  $('calendar').innerHTML = calendarHTML(key, now);
+  const dflt = key === monthKey(now) ? iso(now) : null;
+  if (!selDay || !selDay.startsWith(key)) selDay = dflt;
+  $('dayDetail').innerHTML = selDay ? dayDetailHTML(selDay) : '<span>Tippe auf einen Tag, um die Ausgaben zu sehen.</span>';
+  $$('.dayTile').forEach(t => t.classList.toggle('sel', t.dataset.day === selDay));
+  const wd = weekdayTilesHTML(key, now);
+  $('weekdayTiles').innerHTML = wd; $('wdSec').hidden = !wd;
+  $('monthTiles').innerHTML = monthTilesHTML(key);
+  const sc = catTilesHTML(key, true);
+  $('statCatTiles').innerHTML = sc; $('statCatSec').hidden = !sc;
+  const pl = placeTilesHTML(key);
+  $('placeTiles').innerHTML = pl; $('placeSec').hidden = !pl;
 }
+$('view-stats').addEventListener('click', e => {
+  const d = e.target.closest('.dayTile'); if (d && !d.disabled){ selDay = d.dataset.day; renderStats(); return; }
+  const m = e.target.closest('[data-m]'); if (m){ const [y, mo] = m.dataset.m.split('-').map(Number); view = new Date(y, mo - 1, 1); haptic(); render(); return; }
+  const c = e.target.closest('[data-cat]'); if (c){ showCategoryList(c.dataset.cat); }
+});
 
-/* Verlauf im Monat: Summe pro Tag, Vormonat zum Vergleich, gestrichelt die Prognose */
-function cumulative(key){
-  const [y, m] = key.split('-').map(Number), dim = daysIn(y, m);
-  const cum = new Array(dim + 1).fill(0);
-  ofMonth(key).forEach(i => { cum[+i.date.slice(8, 10)] += i.amount; });
-  for (let d = 1; d <= dim; d++) cum[d] += cum[d - 1];
-  return {dim, cum};
+/* Startseite: Kacheln antippen, Liste auf-/zuklappen, Tagesgeld */
+function showCategoryList(id){
+  showTab('home');
+  $('search').value = cat(id).name; state.listOpen = true; save(); render();
+  setTimeout(() => $('listToggle').scrollIntoView({behavior: 'smooth', block: 'start'}), 60);
 }
-function renderTrend(){
-  const svg = $('trendChart'), tip = $('trendTip');
-  const key = monthKey(view), f = forecast(key), now = new Date();
-  const cur = cumulative(key), prev = cumulative(monthKey(new Date(view.getFullYear(), view.getMonth() - 1, 1)));
-  const dim = cur.dim, last = f.isCurrent ? Math.min(now.getDate(), dim) : dim;
-  const W = svg.clientWidth || 340, H = 210, padL = 8, padR = 14, padT = 26, padB = 22;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  tip.classList.remove('show');
-  if (!(cur.cum[dim] > 0 || prev.cum[prev.dim] > 0)){
-    svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle">Noch keine Daten</text>`;
-    $('trendLegend').innerHTML = ''; svg.onpointermove = svg.onpointerdown = svg.onpointerleave = null; return;
-  }
-  const max = Math.max(cur.cum[dim], prev.cum[prev.dim], f.projected || 0, state.budget || 0, 1) * 1.1;
-  const plotH = H - padT - padB, xs = (W - padL - padR) / Math.max(1, dim - 1);
-  const X = d => padL + (d - 1) * xs, Y = v => padT + plotH - v / max * plotH;
-  const pts = (c, n) => Array.from({length: n}, (_, i) => `${X(i + 1).toFixed(1)},${Y(c[i + 1]).toFixed(1)}`).join(' ');
-  let out = `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${Y(0)}" y2="${Y(0)}"/>`;
-  [1, 8, 15, 22, ...(dim - 22 >= 4 ? [dim] : [])].forEach(d => {
-    out += `<text x="${X(d)}" y="${H - 5}" text-anchor="middle">${d}.</text>`;
-  });
-  if (state.budget){
-    out += `<line class="budgetLine" x1="${padL}" x2="${W - padR}" y1="${Y(state.budget)}" y2="${Y(state.budget)}"/>`;
-    out += `<text x="${padL + 2}" y="${Y(state.budget) - 5}">Budget ${eur0.format(state.budget)}</text>`;
-  }
-  out += `<polyline class="tl tl-prev" points="${pts(prev.cum, Math.min(prev.dim, dim))}"/>`;
-  out += `<polyline class="tl tl-cur" points="${pts(cur.cum, last)}"/>`;
-  if (f.isCurrent && f.projected && last < dim){
-    out += `<line class="tl tl-proj" x1="${X(last)}" y1="${Y(cur.cum[last])}" x2="${X(dim)}" y2="${Y(f.projected)}"/>`;
-    out += `<text class="endLabel" x="${W - padR}" y="${Y(f.projected) - 8}" text-anchor="end">≈ ${eur0.format(f.projected)}</text>`;
-  } else {
-    out += `<text class="endLabel" x="${X(last)}" y="${Y(cur.cum[last]) - 8}" text-anchor="end">${eur0.format(cur.cum[last])}</text>`;
-  }
-  out += `<circle class="tl-dot" cx="${X(last)}" cy="${Y(cur.cum[last])}" r="4"/>`;
-  out += `<line class="cross" id="trendCross" y1="${padT}" y2="${Y(0)}" x1="0" x2="0" style="display:none"/>`;
-  svg.innerHTML = out;
-  $('trendLegend').innerHTML =
-    `<span class="lg" style="--c:var(--accent)">Dieser Monat</span>` +
-    (f.isCurrent && f.projected ? `<span class="lg dash" style="--c:var(--accent)">Prognose</span>` : '') +
-    `<span class="lg" style="--c:var(--sub)">Vormonat</span>` +
-    (state.budget ? `<span class="lg dash" style="--c:var(--critical)">Budget</span>` : '');
-  const monthShort = view.toLocaleDateString('de-DE', {month: 'short'}).replace('.', '');
-  const show = e => {
-    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
-    const d = Math.max(1, Math.min(dim, Math.round((px - padL) / xs) + 1));
-    let txt;
-    if (f.isCurrent && f.projected && d > last)
-      txt = `${d}. ${monthShort}: Prognose ≈ ${eur0.format(cur.cum[last] + (f.projected - cur.cum[last]) * (d - last) / (dim - last))}`;
-    else txt = `${d}. ${monthShort}: ${eur0.format(cur.cum[d])}`;
-    if (d <= prev.dim) txt += ` · Vormonat ${eur0.format(prev.cum[d])}`;
-    tip.textContent = txt; tip.style.left = Math.max(110, Math.min(W - 110, X(d))) + 'px'; tip.classList.add('show');
-    const c = $('trendCross'); c.setAttribute('x1', X(d)); c.setAttribute('x2', X(d)); c.style.display = '';
-  };
-  svg.onpointermove = svg.onpointerdown = show;
-  svg.onpointerleave = () => { tip.classList.remove('show'); const c = $('trendCross'); if (c) c.style.display = 'none'; };
+$('listToggle').onclick = () => { state.listOpen = !state.listOpen; if (!state.listOpen) $('search').value = ''; save(); render(); };
+$('view-home').addEventListener('click', e => {
+  if (e.target.closest('[data-go=budget]')){ showTab('settings'); setTimeout(() => $('budgetInput').focus(), 80); return; }
+  const c = e.target.closest('.catTile'); if (c){ showCategoryList(c.dataset.cat); return; }
+  if (e.target.closest('#tgBtn')) openSavings();
+});
+
+/* Tagesgeld: Überweisung vermerken */
+function openSavings(){
+  const key = monthKey(new Date()), s = savingsSummary(key);
+  const open = s ? toTransfer(s, key) : 0;
+  $('saveAmount').value = open || '';
+  $('saveInfo').textContent = s
+    ? `Gespart in diesem Monat: ${sgn(s.month.saved)}${money(s.month.saved)} · bereits vermerkt: ${eur.format(transferredIn(key))}. Hier trägst du ein, wie viel du ins Tagesgeld überwiesen hast.`
+    : 'Hier trägst du ein, wie viel du ins Tagesgeld überwiesen hast.';
+  renderSaveList();
+  openSheet('saveSheet');
 }
-function renderMonthChart(){
-  const svg = $('monthChart');
-  const W = svg.clientWidth || 340, H = 210, padL = 8, padR = 8, padT = 30, padB = 22;
-  const months = [];
-  for (let k = 5; k >= 0; k--){ const d = new Date(view.getFullYear(), view.getMonth()-k, 1); months.push({d, key:monthKey(d), v:sum(ofMonth(monthKey(d)))}); }
-  const max = Math.max(state.budget || 0, ...months.map(m => m.v), 1) * 1.08;
-  const plotH = H - padT - padB, slot = (W - padL - padR) / months.length, bw = Math.min(34, slot * .55);
-  const y = v => padT + plotH - v / max * plotH;
-  let out = `<line class="grid" x1="${padL}" x2="${W-padR}" y1="${y(0)}" y2="${y(0)}"/>`;
-  months.forEach((m, i) => {
-    const x = padL + slot*i + (slot-bw)/2, h = Math.max(0, y(0) - y(m.v));
-    const r = Math.min(4, h/2, bw/2);
-    // oben abgerundet, Basis gerade
-    if (h > 0) out += `<path class="bar ${i===5?'sel':''}" data-i="${i}" d="M${x},${y(0)} v${-(h-r)} q0,${-r} ${r},${-r} h${bw-2*r} q${r},0 ${r},${r} v${h-r} z"/>`;
-    out += `<text x="${x+bw/2}" y="${H-5}" text-anchor="middle">${m.d.toLocaleDateString('de-DE',{month:'short'}).replace('.','')}</text>`;
-    out += `<rect class="hit" data-i="${i}" x="${padL+slot*i}" y="0" width="${slot}" height="${H}"/>`;
-  });
-  if (state.budget){
-    out += `<line class="budgetLine" x1="${padL}" x2="${W-padR}" y1="${y(state.budget)}" y2="${y(state.budget)}"/>`;
-    out += `<text x="${W-padR}" y="${y(state.budget)-5}" text-anchor="end">Budget ${eur0.format(state.budget)}</text>`;
-  }
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = out;
-  const tip = $('barTip');
-  const showTip = i => {
-    const m = months[i], x = padL + slot*i + slot/2;
-    tip.textContent = `${m.d.toLocaleDateString('de-DE',{month:'long'})}: ${eur.format(m.v)}`;
-    tip.style.left = Math.max(70, Math.min(W - 60, x + 10)) + 'px';
-    tip.classList.add('show');
-    svg.querySelectorAll('.bar').forEach(b => b.classList.toggle('sel', +b.dataset.i === i));
-  };
-  tip.classList.remove('show');
-  svg.onpointerover = svg.onpointerdown = e => { const h = e.target.closest('.hit'); if (h) showTip(+h.dataset.i); };
-  svg.onpointerleave = () => { tip.classList.remove('show'); svg.querySelectorAll('.bar').forEach(b => b.classList.toggle('sel', b.dataset.i === '5')); };
+function renderSaveList(){
+  const list = transfers().slice().sort((a, b) => b.id - a.id).slice(0, 6);
+  $('saveList').hidden = !list.length;
+  $('saveList').innerHTML = list.map(t => `<div class="tgRow"><span>${parseD(t.date).toLocaleDateString('de-DE', {day: 'numeric', month: 'short'})}</span><b>${eur.format(t.amount)}</b><button data-t="${t.id}">Entfernen</button></div>`).join('');
 }
-function renderDonut(){
-  const list = ofMonth(monthKey(view)), total = sum(list), groups = groupByCat(list);
-  $('donutTotal').textContent = eur.format(total);
-  const R = 48, C = 2 * Math.PI * R, gap = groups.length > 1 ? 2 : 0;
-  let off = 0, out = `<circle cx="60" cy="60" r="${R}" stroke="var(--fill)" stroke-width="16"/>`;
-  groups.forEach(([id, v]) => {
-    const len = v / total * C;
-    out += `<circle cx="60" cy="60" r="${R}" stroke="${color(cat(id).c)}" stroke-width="16" stroke-dasharray="${Math.max(0.5, len-gap)} ${C}" stroke-dashoffset="${-off}"/>`;
-    off += len;
-  });
-  $('donut').innerHTML = out;
-  $('catTable').innerHTML = groups.length
-    ? groups.map(([id,v]) => `<div class="trow" style="--c:${color(cat(id).c)}"><span class="dot"></span><span class="nm">${icon(cat(id).ico)}${esc(cat(id).name)}</span><span class="pc">${Math.round(v/total*100)} %</span><span class="vl">${eur.format(v)}</span></div>`).join('')
-    : '<p class="empty" style="padding:10px">Keine Ausgaben in diesem Monat.</p>';
-}
-function renderKpis(){
-  const key = monthKey(view), list = ofMonth(key), total = sum(list), now = new Date();
-  const days = key === monthKey(now) ? now.getDate() : new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
-  const prev = sum(ofMonth(monthKey(new Date(view.getFullYear(), view.getMonth()-1, 1))));
-  const top = list.reduce((a,b) => !a || b.amount > a.amount ? b : a, null);
-  const diff = prev ? (total - prev) / prev * 100 : null;
-  const kpi = (l, v, s='') => `<div class="kpi"><small>${l}</small><b>${v}</b>${s ? `<span>${s}</span>` : ''}</div>`;
-  $('kpis').innerHTML =
-    kpi('Ø pro Tag', eur.format(total/days), `über ${days} Tage`) +
-    kpi('Anzahl', list.length, list.length ? `Ø ${eur.format(total/list.length)}` : '') +
-    kpi('Größte Ausgabe', top ? eur.format(top.amount) : '–', top ? esc(top.note || cat(top.cat).name) : '') +
-    kpi('Ggü. Vormonat', diff === null ? '–' : `${diff > 0 ? '▲ +' : diff < 0 ? '▼ ' : ''}${Math.round(diff)} %`, prev ? `Vormonat ${eur.format(prev)}` : '');
-}
+$('saveList').onclick = e => {
+  const b = e.target.closest('[data-t]'); if (!b) return;
+  state.savings = transfers().filter(t => t.id !== +b.dataset.t); save(); renderSaveList(); render();
+};
+$('saveGo').onclick = () => {
+  const n = parseNum($('saveAmount').value);
+  if (!(n > 0)){ $('saveAmount').focus(); return; }
+  const t = {id: Date.now(), date: iso(new Date()), amount: n};
+  state.savings = [...transfers(), t]; save(); haptic();
+  closeSheet('saveSheet'); render();
+  toast(`${eur.format(n)} ins Tagesgeld vermerkt`, 'Rückgängig', () => { state.savings = transfers().filter(x => x.id !== t.id); save(); render(); });
+};
 
 /* ---------- Einstellungen ---------- */
 function renderSettings(){
@@ -723,14 +659,14 @@ $('importFile').onchange = async e => {
     const items = Array.isArray(d) ? d : d.items;
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
-    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : [], favs: d.favs, favHidden: Array.isArray(d.favHidden) ? d.favHidden : []};
+    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : [], savings: Array.isArray(d.savings) ? d.savings : [], favs: d.favs, favHidden: Array.isArray(d.favHidden) ? d.favHidden : []};
     roundAll(state); migrateIcons(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
   if (!confirm('Wirklich alle Ausgaben, Kategorien und das Budget löschen?')) return;
   const old = state;
-  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: [], wholeEuros: true, theme: old.theme};
+  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: [], savings: [], wholeEuros: true, theme: old.theme};
   save(); render();
   toast('Alle Daten gelöscht', 'Rückgängig', () => { state = old; save(); render(); });
 };
@@ -896,9 +832,8 @@ function applyTheme(){
 $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.theme = b.dataset.t; save(); applyTheme(); render(); };
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
-addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.26';
+const APP_VERSION = '1.27';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);

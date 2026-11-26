@@ -120,7 +120,7 @@ svg.ci{fill:currentColor;stroke:none}
 .legend b{color:var(--label);font-weight:500}
 
 /* Favoriten */
-.favs{margin:0 0 10px}
+.favs{margin:20px 0 10px}
 .favLabel{font-size:13px;color:var(--sub);margin:0 4px 6px;display:flex;justify-content:space-between;gap:8px}
 .favLabel small{font-size:11px;opacity:.8}
 .favRow{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -254,45 +254,77 @@ svg.ci{fill:currentColor;stroke:none}
 .sw-fallback .switch:checked{background:var(--green)}
 .sw-fallback .switch:checked::after{transform:translateX(20px)}
 
-/* ---------- Statistik ---------- */
-.chartCard{position:relative;padding:16px 10px 8px}
-.chart{width:100%;height:210px;display:block;overflow:visible}
-.chart text{fill:var(--sub);stroke:none;font-size:11px}
-.chart .grid{stroke:var(--sep);stroke-width:1}
-.chart .bar{stroke:none;fill:var(--blue);opacity:.45;transition:opacity .2s}
-.chart .bar.sel{opacity:1}
-.chart .budgetLine{stroke:var(--red);stroke-width:1.5;stroke-dasharray:4 4}
-.chart .hit{fill:transparent;stroke:none}
-.chart .tl{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.chart .tl-cur{stroke:var(--blue)}
-.chart .tl-prev{stroke:var(--sub);opacity:.7}
-.chart .tl-proj{stroke:var(--blue);stroke-dasharray:5 5;opacity:.85}
-.chart .tl-dot{fill:var(--blue);stroke:var(--card);stroke-width:2}
-.chart .cross{stroke:var(--sub);stroke-width:1;opacity:.6}
-.chart .endLabel{fill:var(--label);font-size:12px;font-weight:600}
-.tip{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:var(--label);color:var(--card);font-size:13px;font-weight:600;padding:4px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s}
-.tip.show{opacity:1}
-.lg::before{content:"";display:inline-block;width:22px;height:0;border-top:2px solid var(--c);border-radius:0;background:none!important;margin-right:6px;vertical-align:middle}
-.lg.dash::before{border-top-style:dashed}
-.legend span.lg{display:inline-flex;align-items:center;gap:0}
-.legend span.lg::before{width:22px;height:0;border-radius:0;background:none}
-.donutWrap{position:relative;width:180px;height:180px;margin:4px auto 14px}
-.donutWrap svg{width:100%;height:100%;transform:rotate(-90deg)}
-.donutWrap circle{fill:none;stroke-linecap:butt;transition:stroke-dasharray .5s var(--ease),stroke-dashoffset .5s var(--ease)}
-.donutCenter{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
-.donutCenter b{font-size:22px;font-variant-numeric:tabular-nums}
-.donutCenter small{color:var(--sub);font-size:12px}
-.table .trow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:.5px solid var(--sep);font-size:15px}
-.table .dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
-.table .nm{flex:1}
-.table .nm .ci{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:6px;color:var(--c)}
-.table .pc{color:var(--sub);width:44px;text-align:right;font-variant-numeric:tabular-nums}
-.table .vl{width:96px;text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
-.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.kpi{background:var(--card);border-radius:var(--r-card);padding:14px 16px}
-.kpi small{display:block;font-size:13px;color:var(--sub)}
-.kpi b{display:block;font-size:24px;line-height:30px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
-.kpi span{display:block;font-size:13px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ---------- Kacheln ---------- */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tiles.seven{grid-template-columns:repeat(7,1fr);gap:6px}
+.tile{position:relative;background:var(--card);border:0;border-radius:var(--r-md);padding:10px 12px;text-align:left;color:var(--label);display:flex;flex-direction:column;gap:2px;min-width:0;min-height:76px}
+.tile small{font-size:12px;line-height:16px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile b{font-family:var(--font-num);font-size:20px;line-height:26px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tile > span{font-size:11px;line-height:14px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile.wide{grid-column:1/-1;min-height:0}
+button.tile:active{background:var(--fill2)}
+.tile.pos{background:color-mix(in srgb,var(--green) 16%,var(--card))}
+.tile.neg{background:color-mix(in srgb,var(--red) 16%,var(--card))}
+.tile.pos b::before{content:"";}
+/* Kategorie-Kachel */
+.catTile{background:color-mix(in srgb,var(--c) 14%,var(--card));padding-top:10px}
+.catTile .ico.sm{width:26px;height:26px;border-radius:7px;margin-bottom:4px}
+.catTile .ico.sm .ci{width:15px;height:15px}
+.catTile .pct{position:absolute;top:10px;right:10px;font-size:11px;color:var(--sub)}
+.catTile .dl{color:var(--label2)}
+/* Wochentage */
+.tile.wd{align-items:center;text-align:center;padding:8px 2px;min-height:0;gap:0}
+.tile.wd b{font-size:16px;line-height:22px}
+.tile.wd.hi{background:color-mix(in srgb,var(--orange) 22%,var(--card))}
+/* Monate */
+.monthTile.sel{box-shadow:inset 0 0 0 2px var(--blue)}
+.placeTile{border-left:4px solid var(--c)}
+.sectionTitle em{font-style:normal;text-transform:none;color:var(--label3);margin-left:6px}
+/* Kalender */
+.calCard{padding:12px}
+.calHead,.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.calHead span{font-size:11px;text-align:center;color:var(--sub);padding-bottom:4px}
+.dayTile{position:relative;aspect-ratio:1;border:0;border-radius:9px;background:var(--fill3);color:var(--label);display:flex;align-items:flex-end;justify-content:center;padding:0 0 5px;overflow:hidden}
+.dayTile i{position:absolute;top:4px;left:5px;font-style:normal;font-size:9px;line-height:10px;color:var(--label2)}
+.dayTile b{font-family:var(--font-num);font-size:12px;line-height:14px;font-weight:600}
+.dayTile.l1,.calLegend .l1{background:color-mix(in srgb,var(--blue) 24%,var(--fill3))}
+.dayTile.l2,.calLegend .l2{background:color-mix(in srgb,var(--blue) 44%,var(--fill3))}
+.dayTile.l3,.calLegend .l3{background:color-mix(in srgb,var(--blue) 66%,var(--fill3))}
+.dayTile.l4,.calLegend .l4{background:var(--blue)}
+.dayTile.l4,.dayTile.l4 i,.dayTile.l3 i{color:#fff}
+.dayTile.l4 b{color:#fff}
+.dayTile.future{opacity:.35}
+.dayTile.today{box-shadow:inset 0 0 0 2px var(--label)}
+.dayTile.sel{box-shadow:inset 0 0 0 2px var(--orange)}
+.dayDetail{margin:12px 2px 4px;font-size:14px;line-height:19px;min-height:40px}
+.dayDetail b{display:block;font-weight:600}
+.dayDetail span{color:var(--sub)}
+.calLegend{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:6px;font-size:11px;color:var(--sub)}
+.calLegend i{width:14px;height:14px;border-radius:4px;background:var(--fill3);display:block}
+.calLegend span:first-child{margin-right:2px}
+.calLegend span:last-child{margin-left:2px}
+
+/* Tagesgeld */
+.tg{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.tgHead{display:flex;align-items:center;gap:12px}
+.tgHead b{display:block;font-weight:600}
+.tgHead small{display:block;font-size:13px;color:var(--sub);line-height:18px}
+.tgHead .ico{width:38px;height:38px;border-radius:10px}
+.tgBtn{border:0;border-radius:999px;padding:12px 18px;background:var(--green);color:#fff;font-weight:600;font-family:var(--font-num)}
+.tgBtn:active{opacity:.8}
+.saveAmount{text-align:center;font-family:var(--font-num);font-size:44px!important;font-weight:700;padding:14px!important}
+.tgRow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--sep)}
+.tgRow:last-child{border-bottom:0}
+.tgRow span{flex:1}
+.tgRow b{font-family:var(--font-num);font-weight:600}
+.tgRow button{border:0;background:none;color:var(--red);font-size:15px;padding:4px}
+
+/* Liste zum Aufklappen */
+.listToggle{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;border-radius:var(--r-md);background:var(--card);padding:14px 16px;margin:16px 0 8px;font-weight:500}
+.listToggle em{font-style:normal;color:var(--sub);font-weight:400;margin-left:4px}
+.listToggle .ci{width:18px;height:18px;color:var(--label3);transition:transform .25s var(--ease)}
+.listToggle[aria-expanded="true"] .ci{transform:rotate(90deg)}
+.listToggle:active{background:var(--fill2)}
 
 /* ---------- Import aus Screenshot ---------- */
 .importInfo{font-size:13px;line-height:18px;color:var(--sub);margin:2px 4px 10px}
