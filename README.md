@@ -3,7 +3,7 @@
 Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben lokal auf dem Gerät.
 
 ## Auf dem iPhone installieren
-1. Einmalig: Repo → Settings → Pages → Source: **GitHub Actions**. Danach wird bei jedem Push auf `main` automatisch deployt (`.github/workflows/pages.yml`).
+1. Einmalig: Repo → Settings → Pages → Source: **Deploy from a branch**, Branch `main` / `(root)`. Danach wird bei jedem Push auf `main` automatisch deployt.
    URL: https://elpolvo12.github.io/seco/
 2. URL in Safari öffnen → Teilen → **Zum Home-Bildschirm**.
 
