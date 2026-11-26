@@ -14,7 +14,7 @@
   --sep:rgba(60,60,67,.29);
   --fill:rgba(120,120,128,.2); --fill2:rgba(120,120,128,.16); --fill3:rgba(120,120,128,.12);
   /* System-Tint */
-  --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00;
+  --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#fa8c6c;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
   --scrim:rgba(0,0,0,.3);
@@ -276,7 +276,7 @@ button.tile:active{background:var(--fill2)}
 /* Wochentage */
 .tile.wd{align-items:center;text-align:center;padding:8px 2px;min-height:0;gap:0}
 .tile.wd b{font-size:16px;line-height:22px}
-.tile.wd.hi{background:color-mix(in srgb,var(--orange) 22%,var(--card))}
+.tile.wd.hi{background:color-mix(in srgb,var(--heat) 30%,var(--card))}
 /* Monate */
 .monthTile.sel{box-shadow:inset 0 0 0 2px var(--blue)}
 .placeTile{border-left:4px solid var(--c)}
@@ -288,15 +288,15 @@ button.tile:active{background:var(--fill2)}
 .dayTile{position:relative;aspect-ratio:1;border:0;border-radius:9px;background:var(--fill3);color:var(--label);display:flex;align-items:flex-end;justify-content:center;padding:0 0 5px;overflow:hidden}
 .dayTile i{position:absolute;top:4px;left:5px;font-style:normal;font-size:9px;line-height:10px;color:var(--label2)}
 .dayTile b{font-family:var(--font-num);font-size:12px;line-height:14px;font-weight:600}
-.dayTile.l1,.calLegend .l1{background:color-mix(in srgb,var(--blue) 24%,var(--fill3))}
-.dayTile.l2,.calLegend .l2{background:color-mix(in srgb,var(--blue) 44%,var(--fill3))}
-.dayTile.l3,.calLegend .l3{background:color-mix(in srgb,var(--blue) 66%,var(--fill3))}
-.dayTile.l4,.calLegend .l4{background:var(--blue)}
-.dayTile.l4,.dayTile.l4 i,.dayTile.l3 i{color:#fff}
-.dayTile.l4 b{color:#fff}
+.dayTile.l1,.calLegend .l1{background:color-mix(in srgb,var(--heat) 30%,var(--fill3))}
+.dayTile.l2,.calLegend .l2{background:color-mix(in srgb,var(--heat) 52%,var(--fill3))}
+.dayTile.l3,.calLegend .l3{background:color-mix(in srgb,var(--heat) 76%,var(--fill3))}
+.dayTile.l4,.calLegend .l4{background:var(--heat)}
+.dayTile.l3,.dayTile.l4{color:#1c1c1e}
+.dayTile.l3 i,.dayTile.l4 i{color:rgba(28,28,30,.65)}
 .dayTile.future{opacity:.35}
-.dayTile.today{box-shadow:inset 0 0 0 2px var(--label)}
-.dayTile.sel{box-shadow:inset 0 0 0 2px var(--orange)}
+.dayTile.today{box-shadow:inset 0 0 0 2px var(--blue)}
+.dayTile.sel{box-shadow:inset 0 0 0 2px var(--label)}
 .dayDetail{margin:12px 2px 4px;font-size:14px;line-height:19px;min-height:40px}
 .dayDetail b{display:block;font-weight:600}
 .dayDetail span{color:var(--sub)}
