@@ -105,7 +105,7 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .chips button.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--card))}
 .fields{display:flex;gap:8px;margin-bottom:12px}
 .fields input{flex:1;min-width:0;font:inherit;padding:11px 12px;border-radius:10px;border:0;background:var(--card);color:var(--text);min-height:44px;-webkit-appearance:none;appearance:none}
-.fields input[type=date]{flex:0 0 auto;max-width:46%}
+.fields input[type=date]{flex:0 0 auto;max-width:38%}
 .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .keypad button{height:52px;border:0;border-radius:10px;background:var(--card);font-size:26px;font-weight:400;transition:background .1s}
 .keypad button:active{background:var(--fill)}
@@ -159,3 +159,15 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .toast.show{transform:none;opacity:1;pointer-events:auto}
 .toast button{background:none;border:0;color:#64d2ff;font-weight:600;padding:0 4px}
 .toast button:empty{display:none}
+
+/* Ort */
+.noteWrap{flex:1;min-width:0;position:relative;display:flex}
+.noteWrap input{width:100%}
+.noteWrap input.loading{padding-right:34px}
+.locBadge{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none}
+.locBadge.spin{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.switch{-webkit-appearance:none;appearance:none;flex:none!important;width:51px;height:31px;border-radius:16px;background:var(--fill);position:relative;transition:background .25s;cursor:pointer;margin:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .25s var(--ease)}
+.switch:checked{background:var(--good)}
+.switch:checked::after{transform:translateX(20px)}

@@ -26,11 +26,11 @@ let state = load();
 function load(){
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && Array.isArray(s.items)) return {budget:0, cats:DEFAULT_CATS, ...s};
+    if (s && Array.isArray(s.items)) return {budget:0, cats:DEFAULT_CATS, loc:false, home:null, ...s};
   } catch {}
   let items = [];
   try { items = JSON.parse(localStorage.getItem('ausgaben.v1')) || []; } catch {}
-  return {items, cats: structuredClone(DEFAULT_CATS), budget: 0};
+  return {items, cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null};
 }
 const save = () => localStorage.setItem(KEY, JSON.stringify(state));
 
@@ -202,7 +202,9 @@ function openExpense(item){
   else if (!state.cats.some(c => c.id === selCat)) selCat = state.cats[0]?.id;
   $('expDelete').hidden = !item;
   renderAmount(); renderChips();
+  setLocBadge('');
   openSheet('expenseSheet');
+  if (!item && state.loc) fillLocation();
 }
 function renderAmount(){
   const [int, dec] = amountStr.split(',');
@@ -324,6 +326,10 @@ function renderKpis(){
 function renderSettings(){
   if (document.activeElement !== $('budgetInput'))
     $('budgetInput').value = state.budget ? state.budget.toLocaleString('de-DE',{minimumFractionDigits:2}) + ' €' : '';
+  $('locToggle').checked = !!state.loc;
+  $('homeLabel').textContent = state.home ? 'Zuhause neu festlegen' : 'Aktuellen Standort als Zuhause festlegen';
+  $('homeState').textContent = state.home ? '✓' : '›';
+  $('homeClear').hidden = !state.home;
   $('catList').innerHTML = state.cats.map(c => `<button class="cell action" data-cat="${c.id}">
       <span class="left"><span class="ico" style="--c:${color(c.c)}">${c.ico}</span>${esc(c.name)}</span><span class="chev">›</span></button>`).join('')
     + `<button class="cell action add" data-cat="">＋ Kategorie hinzufügen</button>`;
@@ -397,17 +403,90 @@ $('importFile').onchange = async e => {
     const items = Array.isArray(d) ? d : d.items;
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
-    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: +d.budget || 0};
+    state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: +d.budget || 0, loc: !!d.loc, home: d.home || null};
     save(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
   if (!confirm('Wirklich alle Ausgaben, Kategorien und das Budget löschen?')) return;
   const old = state;
-  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0};
+  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null};
   save(); render();
   toast('Alle Daten gelöscht', 'Rückgängig', () => { state = old; save(); render(); });
 };
+
+
+/* ---------- Ort ---------- */
+const HOME_RADIUS = 300; // Meter
+const getPos = (opts = {}) => new Promise((res, rej) => {
+  if (!navigator.geolocation) return rej(new Error('Standort wird nicht unterstützt'));
+  navigator.geolocation.getCurrentPosition(res, rej, {enableHighAccuracy:true, timeout:10000, maximumAge:30000, ...opts});
+});
+function distance(a, b){ // Haversine, Meter
+  const R = 6371e3, r = x => x * Math.PI / 180;
+  const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon);
+  const h = Math.sin(dLat/2)**2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+let placeCache = null; // {lat, lon, t, name}
+async function placeName(lat, lon, accuracy){
+  if (placeCache && Date.now() - placeCache.t < 10*60e3 && distance(placeCache, {lat, lon}) < 40) return placeCache.name;
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}&zoom=18&addressdetails=1&accept-language=de`;
+  const r = await fetch(url, {headers: {'Accept': 'application/json'}});
+  if (!r.ok) throw new Error('Ortssuche fehlgeschlagen');
+  const d = await r.json(), a = d.address || {};
+  const place = a.city || a.town || a.village || a.municipality || a.suburb || '';
+  const poiCats = ['amenity','shop','tourism','leisure','craft','office','railway','aeroway','public_transport','healthcare'];
+  const poi = accuracy <= 100 && d.name && poiCats.includes(d.category) ? d.name : '';
+  const street = a.road || a.pedestrian || a.square || a.neighbourhood || a.suburb || '';
+  const parts = [poi || street, place].filter((v, i, arr) => v && arr.indexOf(v) === i);
+  const name = parts.join(', ');
+  placeCache = {lat, lon, t: Date.now(), name};
+  return name;
+}
+function setLocBadge(state){
+  const b = $('locBadge');
+  b.textContent = state === 'busy' ? '📍' : '';
+  b.classList.toggle('spin', state === 'busy');
+  $('note').classList.toggle('loading', state === 'busy');
+}
+let locRun = 0;
+async function fillLocation(){
+  const run = ++locRun;
+  const stillValid = () => run === locRun && $('expenseSheet').classList.contains('open') && !editing && !$('note').value.trim();
+  setLocBadge('busy');
+  $('note').placeholder = 'Ort wird gesucht …';
+  try {
+    const p = await getPos({maximumAge: 5000});
+    const here = {lat: p.coords.latitude, lon: p.coords.longitude};
+    if (state.home && distance(here, state.home) <= HOME_RADIUS) return; // zuhause: nichts eintragen
+    const name = await placeName(here.lat, here.lon, p.coords.accuracy);
+    if (name && stillValid()) $('note').value = name;
+  } catch (e) {
+    if (e && e.code === 1 && run === locRun) toast('Standortzugriff verweigert – in den iOS-Einstellungen erlauben');
+  } finally {
+    if (run === locRun){ setLocBadge(''); $('note').placeholder = 'Notiz'; }
+  }
+}
+$('note').addEventListener('input', () => { locRun++; setLocBadge(''); $('note').placeholder = 'Notiz'; });
+
+$('locToggle').onchange = async e => {
+  state.loc = e.target.checked; save();
+  if (state.loc){
+    try { await getPos(); if (!state.home) toast('Tipp: Lege „Zuhause“ fest, damit dort kein Ort eingetragen wird'); }
+    catch (err) { state.loc = false; save(); renderSettings(); toast(err.code === 1 ? 'Standortzugriff verweigert' : 'Standort nicht verfügbar'); }
+  }
+};
+$('homeSet').onclick = async () => {
+  $('homeLabel').textContent = 'Standort wird ermittelt …';
+  try {
+    const p = await getPos({maximumAge: 0});
+    state.home = {lat: p.coords.latitude, lon: p.coords.longitude}; save();
+    toast('Zuhause gespeichert');
+  } catch (err) { toast(err.code === 1 ? 'Standortzugriff verweigert' : 'Standort nicht verfügbar'); }
+  renderSettings();
+};
+$('homeClear').onclick = () => { state.home = null; save(); renderSettings(); toast('Zuhause entfernt'); };
 
 /* ---------- Toast ---------- */
 let toastTimer;
