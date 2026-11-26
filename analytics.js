@@ -56,21 +56,17 @@ const transferredIn = key => transfers().filter(t => t.date.startsWith(key)).red
 const transferredAll = () => transfers().reduce((s, t) => s + t.amount, 0);
 const toTransfer = (s, key) => Math.max(0, s.month.saved - transferredIn(key));
 
-function saveTilesHTML(s){
-  if (!s) return `<button class="tile wide" data-go="budget"><small>Gespart</small><b>–</b><span>Lege ein Budget fest, dann siehst du hier, was du sparst.</span></button>`;
-  const tile = (label, r) => {
-    const cls = r.saved > 0 ? 'pos' : r.saved < 0 ? 'neg' : '';
-    return `<div class="tile ${cls}"><small>${label}</small><b>${sgn(r.saved)}${money(r.saved)}</b><span>${s.base.byBudget ? 'Budget' : 'Richtwert'} ${eur.format(r.budget)}</span></div>`;
-  };
-  return s.isCur ? tile('Heute', s.day) + tile('Woche', s.week) + tile('Monat', s.month) : tile('Monat', s.month);
-}
-function tgCardHTML(s, key){
-  if (!s || !s.isCur) return '';
-  const open = toTransfer(s, key), done = transferredIn(key);
-  return `<div class="card tg">
-    <div class="tgHead"><span class="ico" style="--c:var(--green)">${icon('piggy')}</span>
-      <div><b>Tagesgeld</b><small>${done ? `${eur.format(done)} diesen Monat überwiesen` : 'Noch nichts überwiesen'}${transferredAll() > done ? ` · ${eur.format(transferredAll())} gesamt` : ''}</small></div></div>
-    <button class="tgBtn" id="tgBtn">${open > 0 ? `${eur.format(open)} ins Tagesgeld` : 'Überweisung vermerken'}</button>
+/* Eine Karte: Gespart im Monat groß, Heute/Woche als Chips, Tagesgeld als Link */
+function saveCardHTML(s, key){
+  if (!s) return `<button class="saveCard wide" data-go="budget"><span class="ico" style="--c:var(--green)">${icon('piggy')}</span><div class="grow"><small>Gespart</small><b>–</b><span class="hint">Lege ein Budget fest, dann siehst du hier, was du sparst.</span></div></button>`;
+  const m = s.month, open = s.isCur ? toTransfer(s, key) : 0, done = transferredIn(key);
+  const chip = (label, r) => `<span class="${r.saved > 0 ? 'pos' : r.saved < 0 ? 'neg' : ''}">${label} ${sgn(r.saved)}${money(r.saved)}</span>`;
+  const chips = (s.isCur ? chip('Heute', s.day) + chip('Woche', s.week) : '') + (done ? `<span>Überwiesen ${eur.format(done)}</span>` : '');
+  return `<div class="saveCard">
+    <div class="scTop"><span class="ico" style="--c:var(--green)">${icon('piggy')}</span>
+      <div class="grow"><small>Gespart im Monat</small><b>${sgn(m.saved)}${money(m.saved)}</b></div>
+      ${s.isCur ? `<button class="scBtn" id="tgBtn">Ins Tagesgeld ›</button>` : ''}</div>
+    ${chips ? `<div class="scChips">${chips}</div>` : ''}
   </div>`;
 }
 

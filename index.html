@@ -25,23 +25,22 @@ try{if(!(window.CSS&&(CSS.supports("appearance","switch")||CSS.supports("-webkit
     <h1 class="largeTitle monthTitle"></h1>
   </header>
 
-  <div class="hero">
-    <div class="sublabel">Ausgegeben</div>
-    <div class="total" id="total"></div>
-    <div class="todayLeft" id="todayLeft" hidden></div>
-    <div id="budgetBox" hidden>
-      <div class="progress"><i id="budgetFill"></i></div>
-      <div class="budgetText" id="budgetText"></div>
+  <div class="heroCard">
+    <div class="ringWrap">
+      <div class="ring">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ringBg" cx="60" cy="60" r="52"/><circle class="ringFg" id="ringFg" cx="60" cy="60" r="52"/></svg>
+        <div class="ringC"><b id="ringMain"></b><small id="ringLabel"></small></div>
+      </div>
+      <div class="ringSide">
+        <div><small id="sideMonthLabel">Monat</small><b id="sideMonth"></b></div>
+        <div id="sideDailyRow"><small id="sideDailyLabel">Tagesbudget</small><b id="sideDaily"></b></div>
+        <div id="sideForecastRow"><small>Prognose Monatsende</small><b id="sideForecast"></b><em id="sideForecastNote"></em></div>
+      </div>
     </div>
-    <div class="forecast" id="forecast" hidden></div>
     <button class="linkbtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
   </div>
 
-  <div id="saveSec">
-    <h3 class="sectionTitle">Gespart</h3>
-    <div class="tiles" id="saveTiles"></div>
-    <div id="tgCard"></div>
-  </div>
+  <div id="saveSec"><div id="saveCard"></div></div>
 
   <div id="catSec" hidden>
     <h3 class="sectionTitle">Kategorien</h3>

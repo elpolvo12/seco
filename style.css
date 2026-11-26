@@ -64,7 +64,7 @@ svg.ci{fill:currentColor;stroke:none}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
 /* Zahlen in SF Rounded */
-.total,.amountDisplay,.amt,.todayLeft b,.kpi b,.donutCenter b,.table .vl,.impAmt input,.keypad button,.favBtn b,.forecast b,.budgetText b,.day span:last-child,.suggest button{font-family:var(--font-num)}
+.amountDisplay,.amt,.kpi b,.donutCenter b,.table .vl,.impAmt input,.keypad button,.favBtn b,.forecast b,.budgetText b,.day span:last-child,.suggest button{font-family:var(--font-num)}
 
 /* ---------- Ansichten & Titelleiste ---------- */
 .view{display:none;padding:env(safe-area-inset-top) 16px calc(112px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;animation:fade .25s var(--ease)}
@@ -91,25 +91,30 @@ svg.ci{fill:currentColor;stroke:none}
 .linkbtn:disabled{opacity:.4}
 
 /* ---------- Startseite: Summe ---------- */
-.hero{padding:0 0 4px;margin-bottom:18px}
-.sublabel{font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.02em}
-.total{font-size:56px;line-height:62px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin:0 0 8px}
-.todayLeft{display:inline-block;margin:0 0 14px;padding:9px 18px;border-radius:999px;background:color-mix(in srgb,var(--green) 20%,transparent)}
-.todayLeft b{display:block;font-size:20px;line-height:24px;font-weight:700;font-variant-numeric:tabular-nums}
-.todayLeft small{display:block;font-size:12px;line-height:16px;color:var(--sub);margin-top:1px}
-.todayLeft.warn{background:color-mix(in srgb,var(--orange) 24%,transparent)}
-.todayLeft.over{background:color-mix(in srgb,var(--red) 22%,transparent)}
-.progress{height:8px;border-radius:4px;background:var(--fill3);overflow:hidden;margin:0 0 10px}
-.progress i{display:block;height:100%;border-radius:4px;background:var(--green);transition:width .5s var(--ease),background .3s}
-.progress.warn i{background:var(--orange)}
-.progress.over i{background:var(--red)}
-.budgetText{font-size:15px;line-height:20px;color:var(--sub)}
-.budgetText b{color:var(--label);font-weight:600}
-.budgetText .ci{color:var(--orange)}
-.progress.over ~ .budgetText .ci{color:var(--red)}
-.forecast{font-size:15px;line-height:20px;color:var(--sub);margin-top:6px}
-.forecast b{color:var(--label);font-weight:600;font-variant-numeric:tabular-nums}
-.hero .linkbtn{padding-left:0}
+.heroCard{background:var(--card);border-radius:24px;padding:20px;margin-bottom:14px}
+.heroCard .linkbtn{padding:12px 0 0;display:block}
+.heroCard .linkbtn[hidden]{display:none}
+.ringWrap{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:150px;height:150px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);fill:none}
+.ring circle{stroke-width:12;stroke-linecap:round}
+.ringBg{stroke:var(--fill3)}
+.ringFg{stroke:var(--label3);transition:stroke-dasharray .6s var(--ease),stroke .3s}
+.ringFg.ok{stroke:var(--green)}
+.ringFg.warn{stroke:var(--orange)}
+.ringFg.over{stroke:var(--red)}
+.ringC{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:0 16px}
+.ringC b{font-family:var(--font-num);font-size:36px;line-height:40px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ringC b.bad{color:var(--red)}
+.ringC small{font-size:12px;line-height:15px;color:var(--sub)}
+.ringSide{flex:1;min-width:0}
+.ringSide > div{margin-bottom:11px}
+.ringSide > div:last-child{margin-bottom:0}
+.ringSide small{display:block;font-size:12px;line-height:16px;color:var(--sub)}
+.ringSide b{display:block;font-family:var(--font-num);font-size:17px;line-height:22px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ringSide b.good,.ringSide em.good{color:var(--green)}
+.ringSide b.bad,.ringSide em.bad{color:var(--red)}
+.ringSide em{display:block;font-style:normal;font-size:12px;line-height:16px;color:var(--sub);font-weight:500}
 
 /* Kategorie-Stapel */
 .stack{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden}
@@ -308,14 +313,20 @@ button.tile:active{background:var(--fill2)}
 .calLegend span:last-child{margin-left:2px}
 
 /* Tagesgeld */
-.tg{display:flex;flex-direction:column;gap:12px;margin-top:8px}
-.tgHead{display:flex;align-items:center;gap:12px}
-.tgHead b{display:block;font-weight:600}
-.tgHead small{display:block;font-size:13px;color:var(--sub);line-height:18px}
-.tgHead .ico{width:36px;height:36px}
-.tgHead .ico .ci{width:32px;height:32px}
-.tgBtn{border:0;border-radius:999px;padding:12px 18px;background:var(--green);color:#fff;font-weight:600;font-family:var(--font-num)}
-.tgBtn:active{opacity:.8}
+.saveCard{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:24px;padding:16px 18px;margin-bottom:14px;color:var(--label)}
+.scTop{display:flex;align-items:center;gap:12px}
+.saveCard .ico{width:36px;height:36px}
+.saveCard .ico .ci{width:32px;height:32px}
+.saveCard small{display:block;font-size:13px;color:var(--sub)}
+.saveCard b{display:block;font-family:var(--font-num);font-size:28px;line-height:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.saveCard .grow{flex:1;min-width:0}
+.saveCard .hint{display:block;font-size:13px;color:var(--sub);margin-top:2px}
+.scBtn{border:0;background:none;color:var(--blue);font-size:15px;font-weight:500;white-space:nowrap;padding:6px 0 6px 8px}
+.scBtn:active{opacity:.4}
+.scChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.scChips span{font-size:13px;background:var(--fill3);border-radius:999px;padding:5px 11px;font-family:var(--font-num);font-weight:500}
+.scChips .pos{background:color-mix(in srgb,var(--green) 20%,transparent)}
+.scChips .neg{background:color-mix(in srgb,var(--red) 20%,transparent)}
 .saveAmount{text-align:center;font-family:var(--font-num);font-size:44px!important;font-weight:700;padding:14px!important}
 .tgRow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:.5px solid var(--sep)}
 .tgRow:last-child{border-bottom:0}

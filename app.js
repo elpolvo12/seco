@@ -161,42 +161,14 @@ function syncCompactBar(){
 addEventListener('scroll', () => $('compactBar').classList.toggle('show', scrollY > 48), {passive: true});
 
 /* ---------- Übersicht ---------- */
-function budgetStatus(total, budget, key){
-  const now = new Date(), isCurrent = key === monthKey(now);
-  const pct = total / budget;
-  let text;
-  if (pct > 1) text = `${icon('warn','inl')} <b>${eur.format(total - budget)}</b> über Budget von ${eur0.format(budget)}`;
-  else {
-    const rest = budget - total;
-    if (isCurrent){
-      text = `Noch <b>${eur.format(rest)}</b> von ${eur0.format(budget)}`;
-    } else text = `<b>${eur.format(rest)}</b> von ${eur0.format(budget)} übrig`;
-    if (pct >= .8) text = icon('warn','inl') + ' ' + text;
-  }
-  return {pct, text, cls: pct > 1 ? 'over' : pct >= .8 ? 'warn' : ''};
-}
-
 function renderHome(){
   const key = monthKey(view);
   const month = ofMonth(key);
   const total = sum(month);
-  $('total').textContent = eur.format(total);
-
-  const b = state.budget;
-  $('budgetBox').hidden = !b;
-  $('setBudgetHint').hidden = !!b;
-  if (b){
-    const s = budgetStatus(total, b, key);
-    $('budgetFill').style.width = Math.min(100, s.pct*100) + '%';
-    $('budgetFill').parentElement.className = 'progress ' + s.cls;
-    $('budgetText').innerHTML = s.text;
-  }
-  renderInsights(key);
-
+  renderHero(key, total);
   const isCur = key === monthKey(new Date());
   const sv = savingsSummary(key);
-  $('saveTiles').innerHTML = saveTilesHTML(sv);
-  $('tgCard').innerHTML = tgCardHTML(sv, key);
+  $('saveCard').innerHTML = saveCardHTML(sv, key);
   const ct = catTilesHTML(key, false), kt = kpiTilesHTML(key);
   $('catTiles').innerHTML = ct; $('catSec').hidden = !ct;
   $('kpiTiles').innerHTML = kt; $('kpiSec').hidden = !kt;
@@ -461,31 +433,50 @@ function todayLeft(now = new Date()){
   return {left: Math.round(allowance - spentToday), allowance: Math.round(allowance), exhausted: target - before <= 0, byBudget: !!state.budget};
 }
 
-function renderInsights(key){
+/* Hero: Ring (Anteil des Monatsbudgets) mit „heute noch“ in der Mitte, rechts Monat · Tagesbudget · Prognose */
+function renderHero(key, total){
   const now = new Date(), isCur = key === monthKey(now);
   const f = forecast(key, now), t = isCur ? todayLeft(now) : null;
-  const tl = $('todayLeft');
-  tl.hidden = !t;
+  const target = state.budget || f.histAvg || 0;
+  const byBudget = !!state.budget;
+  const C = 2 * Math.PI * 52;
+  // Ring: Anteil von Budget bzw. Richtwert; grün < 80 %, orange bis 100 %, rot darüber
+  const pct = target ? total / target : 0;
+  const ringCls = !target ? '' : pct > 1 ? 'over' : pct >= .8 ? 'warn' : 'ok';
+  const fg = $('ringFg');
+  fg.setAttribute('class', 'ringFg ' + ringCls);
+  fg.style.strokeDasharray = `${target ? Math.max(pct > 0 ? 0.5 : 0, Math.min(1, pct) * C) : 0} ${C}`;
+  // Mitte
+  let main, label;
   if (t){
-    const src = t.byBudget ? 'nach Budget' : 'nach Ø der letzten Monate';
-    let big, cls;
-    if (t.exhausted){ big = t.byBudget ? 'Budget aufgebraucht' : 'Schon über dem üblichen Monat'; cls = 'over'; }
-    else if (t.left < 0){ big = `Heute ${eur.format(-t.left)} über Tagesbudget`; cls = 'over'; }
-    else { big = `Heute noch ${eur.format(t.left)}`; cls = t.left <= t.allowance * 0.25 ? 'warn' : ''; }
-    tl.className = 'todayLeft ' + cls;
-    tl.innerHTML = `<b>${big}</b>${t.exhausted ? '' : `<small>Tagesbudget ${eur.format(t.allowance)} · ${src}</small>`}`;
+    if (t.exhausted){ main = byBudget ? '0 €' : eur.format(total); label = byBudget ? 'aufgebraucht' : 'über Ø'; }
+    else if (t.left < 0){ main = '−' + eur.format(-t.left); label = 'über Tagesbudget'; }
+    else { main = eur.format(t.left); label = 'heute noch'; }
+  } else { main = eur.format(total); label = 'ausgegeben'; }
+  $('ringMain').textContent = main;
+  $('ringMain').className = t && (t.exhausted || t.left < 0) ? 'bad' : '';
+  $('ringLabel').textContent = label;
+  // Seite: Monat
+  $('sideMonthLabel').textContent = isCur ? 'Monat' : 'Gesamt';
+  $('sideMonth').textContent = target ? `${eur.format(total)} ${byBudget ? 'von' : '· Ø'} ${eur.format(target)}` : eur.format(total);
+  // Tagesbudget
+  $('sideDailyRow').hidden = !t || t.exhausted;
+  if (t && !t.exhausted){
+    $('sideDailyLabel').textContent = byBudget ? 'Tagesbudget' : 'Tagesbudget (Richtwert)';
+    $('sideDaily').textContent = eur.format(t.allowance);
   }
-  const fc = $('forecast');
-  fc.hidden = !(isCur && f.projected);
-  if (!fc.hidden){
-    let extra = '';
-    if (state.budget) extra = f.projected > state.budget ? ` · ▲ ${eur.format(f.projected - state.budget)} über Budget` : ' · im Budget ✓';
-    else if (f.histAvg){
-      const pct = Math.round((f.projected - f.histAvg) / f.histAvg * 100);
-      extra = Math.abs(pct) < 3 ? ` · ≈ Ø ${eur.format(f.histAvg)}` : ` · ${pct > 0 ? '▲ +' : '▼ '}${pct} % zu Ø ${eur.format(f.histAvg)}`;
-    }
-    fc.innerHTML = `Prognose Monatsende: <b>${eur.format(f.projected)}</b>${extra}`;
+  // Prognose: grün im Budget, rot darüber (Symbol + Text, nicht nur Farbe)
+  const showFc = isCur && f.projected != null;
+  $('sideForecastRow').hidden = !showFc;
+  if (showFc){
+    const over = target && f.projected > target;
+    const el = $('sideForecast');
+    el.textContent = `${eur.format(f.projected)} ${!target ? '' : over ? '▲' : '✓'}`.trim();
+    el.className = !target ? '' : over ? 'bad' : 'good';
+    $('sideForecastNote').textContent = !target ? '' : over ? `${eur.format(f.projected - target)} über ${byBudget ? 'Budget' : 'Ø'}` : (byBudget ? 'im Budget' : 'unter Ø');
+    $('sideForecastNote').className = !target ? '' : over ? 'bad' : 'good';
   }
+  $('setBudgetHint').hidden = !!state.budget;
 }
 
 /* Favoriten: häufigste Ausgaben (Name + Betrag), jüngere zählen mehr */
@@ -872,7 +863,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.33';
+const APP_VERSION = '1.34';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
