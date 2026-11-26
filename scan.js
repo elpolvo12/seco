@@ -120,6 +120,9 @@ const BankParser = (() => {
   function cleanName(s){
     for (let k = 0; k < 4 && PREFIX.test(s); k++) s = s.replace(PREFIX, '');
     s = s.replace(/(\p{L}{3,}.*?)\s+\p{L}\.?\s*$/u, '$1');   // abgeschnitten: "Shop L" -> "Shop"
+    const noLegal = s.replace(/[\s,\-]+(gmbh|mbh|ag|se|kg|ohg|ug|gbr|e\.?\s?k\.?|e\.?\s?v\.?|ltd\.?|inc\.?|llc|s\.?a\.?r\.?l\.?|b\.?v\.?|s\.?a\.?)\b.*$/i, '');
+    if ((noLegal.match(/\p{L}/gu) || []).length >= 3) s = noLegal;
+    s = s.replace(/[\/\\;:,.\-–]+\s*$/, '');
     return niceName(s.replace(NOISE, ' ').replace(/[|_*#@<>»«©®"]/g, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–.,:]+|[\s\-–.,:]+$/g, '').trim());
   }
   const isNameLike = s => (s.match(/\p{L}/gu) || []).length >= 3;
@@ -161,13 +164,15 @@ const BankParser = (() => {
       pendingName = '';
     }
     closeBlock();
+    const firstDated = raw.find(r => r.date);
+    raw.forEach(r => { if (!r.date && firstDated){ r.date = firstDated.date; r.dateGuess = true; } });
     const minus = raw.filter(r => r.sign === '-').length;
     const entries = raw
       .filter(r => r.sign !== '+')                             // Plus (Gutschriften) immer ignorieren
       .filter(r => minus ? r.sign === '-' : true)              // gibt es Minus-Beträge, nur diese
       .filter(r => r.amount > 0 && r.amount <= MAX_AMOUNT)     // > 1000 € ignorieren
       .filter(r => r.name)
-      .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today), bankCat: r.bankCat || ''}))
+      .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today), dateGuess: !!r.dateGuess || !r.date, bankCat: r.bankCat || ''}))
       .filter(r => r.amount > 0);
     const signed = raw.filter(r => r.sign).length;
     const looksLikeBank = raw.length >= 2 && (signed >= 2 || dateHeaders >= 1 || raw.filter(r => r.hasCurrency).length >= 2);
@@ -313,7 +318,18 @@ function isDuplicate(r){
   return state.items.some(i => i.date === r.date && Math.round(i.amount) === r.amount
     && (!i.note || i.note.toLowerCase().includes(n.slice(0, 5)) || n.includes(i.note.toLowerCase().slice(0, 5))));
 }
+function completeNames(entries){
+  const known = [...new Set([...entries.map(e => e.name), ...state.items.map(i => i.note).filter(Boolean)])];
+  entries.forEach(e => {
+    if (e.name.length < 5) return;
+    const n = e.name.toLowerCase();
+    const longer = known.filter(k => k.length > e.name.length && k.toLowerCase().startsWith(n)).sort((a, b) => a.length - b.length)[0];
+    if (longer) e.name = longer;
+  });
+  return entries;
+}
 function openImport(entries){
+  completeNames(entries);
   importRows = entries.map(e => {
     const dup = isDuplicate(e);
     return {...e, cat: guessCat(e.name, e.bankCat) || (state.cats.find(c => c.id === 'other') || state.cats[0]).id, on: !dup, dup};
@@ -330,7 +346,7 @@ function renderImport(){
         <input class="impName" data-f="name" value="${esc(r.name)}" autocomplete="off">
         <div class="impMeta">
           <select data-f="cat">${catOpts(r.cat)}</select>
-          <span class="impDate">${new Date(r.date + 'T12:00').toLocaleDateString('de-DE', {day:'numeric', month:'short'})}</span>
+          <label class="impDate ${r.dateGuess ? 'guess' : ''}">${r.dateGuess ? '? ' : ''}${new Date(r.date + 'T12:00').toLocaleDateString('de-DE', {day:'numeric', month:'short'})}<input type="date" data-f="date" value="${r.date}"></label>
           ${r.dup ? '<span class="impDup">schon erfasst</span>' : ''}
         </div>
       </div>
@@ -353,7 +369,8 @@ $('importList').onchange = e => {
     r.amount = n > 0 && n <= MAX_AMOUNT ? n : r.amount;
     if (!(n > 0 && n <= MAX_AMOUNT)) toast('Nur Beträge von 1 bis 1000 €');
     renderImport();
-  } else r[f] = e.target.value.trim();
+  } else if (f === 'date'){ if (e.target.value){ r.date = e.target.value; r.dateGuess = false; r.dup = isDuplicate(r); } renderImport(); }
+  else r[f] = e.target.value.trim();
 };
 $('importSave').onclick = () => {
   const rows = importRows.filter(r => r.on && r.amount > 0);

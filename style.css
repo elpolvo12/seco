@@ -220,3 +220,6 @@ body:has(.sheetWrap.open) .toast.show{transform:none}
 .scanBtn.left{right:auto;left:0}
 .pasteArea{width:100%;min-height:220px;border:0;border-radius:12px;background:var(--card);color:var(--text);font:15px/1.4 -apple-system,system-ui,sans-serif;padding:12px;resize:vertical;margin-bottom:10px}
 .cell .sub{color:var(--sub);font-variant-numeric:tabular-nums}
+.impDate{position:relative}
+.impDate input{position:absolute;inset:0;opacity:0;width:100%}
+.impDate.guess{color:var(--warning);font-weight:600}
