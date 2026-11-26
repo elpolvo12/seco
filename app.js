@@ -173,9 +173,6 @@ function renderHome(){
   const isCur = key === monthKey(new Date());
   const sv = savingsSummary(key);
   $('saveCard').innerHTML = saveCardHTML(sv, key);
-  const ct = catTilesHTML(key, false), kt = kpiTilesHTML(key);
-  $('catTiles').innerHTML = ct; $('catSec').hidden = !ct;
-  $('kpiTiles').innerHTML = kt; $('kpiSec').hidden = !kt;
 
   const q = $('search').value.trim().toLowerCase();
   renderFavs(key, q);
@@ -547,6 +544,8 @@ function renderStats(){
   const wd = weekdayTilesHTML(key, now);
   $('weekdayTiles').innerHTML = wd; $('wdSec').hidden = !wd;
   $('monthTiles').innerHTML = monthTilesHTML(key);
+  const kt = kpiTilesHTML(key);
+  $('kpiTiles').innerHTML = kt; $('kpiSec').hidden = !kt;
   const sc = catTilesHTML(key, true);
   $('statCatTiles').innerHTML = sc; $('statCatSec').hidden = !sc;
   const pl = placeTilesHTML(key);
@@ -864,7 +863,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.51';
+const APP_VERSION = '1.52';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
