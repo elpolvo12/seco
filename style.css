@@ -19,6 +19,7 @@
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
   --hc-bg:linear-gradient(150deg,#ffffff 0%,#eceef3 100%); --hc-fg:#111114; --hc-fg2:rgba(17,17,20,.55); --hc-line:rgba(17,17,20,.14); --hc-border:rgba(0,0,0,.06); --hc-shadow:0 10px 30px rgba(0,0,0,.10); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.0);
   --pos:#1b8a3f; --neg:#d63a30;
+  --holo-op:.55; --holo-blend:multiply;
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
@@ -40,6 +41,7 @@
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
   --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.10);
   --pos:#34d058; --neg:#ff6b61;
+  --holo-op:.8; --holo-blend:screen;
   --scrim:rgba(0,0,0,.55);
 }
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{
@@ -52,6 +54,7 @@
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
   --hc-bg:linear-gradient(150deg,#3b3b42 0%,#242428 55%,#18181b 100%); --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.58); --hc-line:rgba(255,255,255,.16); --hc-border:rgba(255,255,255,.10); --hc-shadow:0 14px 34px rgba(0,0,0,.55); --hc-ok:var(--pos); --hc-bad:var(--neg); --hc-sheen:rgba(255,255,255,.10);
   --pos:#34d058; --neg:#ff6b61;
+  --holo-op:.8; --holo-blend:screen;
   --scrim:rgba(0,0,0,.55);
 }}
 
@@ -99,11 +102,19 @@ svg.ci{fill:currentColor;stroke:none}
 /* ---------- Startseite: Summe ---------- */
 /* Karte im Kartenformat (ISO/IEC 7810 ID-1: 85,6 × 54 mm = 1,586 : 1) */
 .heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 16px;margin-bottom:14px;color:var(--hc-fg);background:var(--hc-bg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow)}
-.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 0% 0%,var(--hc-sheen),transparent 55%),repeating-linear-gradient(115deg,var(--hc-sheen) 0 1px,transparent 1px 8px);opacity:.55}
+.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 80% at 0% 0%,var(--hc-sheen),transparent 55%),repeating-linear-gradient(115deg,var(--hc-sheen) 0 1px,transparent 1px 8px);opacity:.5}
+/* Hologramm-Folie: weicher Regenbogen-Streifen, wandert beim Scrollen und leicht von selbst */
+.heroCard::after{content:"";position:absolute;top:0;bottom:0;left:-100%;width:300%;pointer-events:none;border-radius:inherit;opacity:var(--holo-op);mix-blend-mode:var(--holo-blend);transform:translateX(var(--hx,0px));
+  background:linear-gradient(112deg,transparent 30%,rgba(110,225,255,.30) 38%,rgba(185,150,255,.34) 44%,rgba(255,150,210,.32) 50%,rgba(255,205,150,.28) 56%,rgba(150,255,205,.26) 62%,transparent 70%);
+  animation:holoDrift 9s ease-in-out infinite alternate}
+@keyframes holoDrift{from{translate:-4% 0}to{translate:4% 0}}
 .heroCard > *{position:relative;z-index:1}
-.hcTop{display:flex;justify-content:space-between;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
+.hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
+.brand{display:inline-flex;align-items:center;gap:8px;color:var(--hc-fg)}
+.brand .seal{width:26px;height:26px;flex:none}
+.brand b{font-family:var(--font-num);font-size:16px;font-weight:300;letter-spacing:.16em;text-transform:lowercase}
 .hcNum{font-family:var(--font-num);font-size:64px;line-height:66px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
-.hcSub{font-size:14px;font-weight:400;color:var(--hc-fg2);margin-top:1px}
+.hcSub{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:400;color:var(--hc-fg2);margin-top:1px}
 .hcBar{height:3px;border-radius:2px;background:var(--hc-line);margin:0 0 11px;overflow:hidden}
 .hcBar i{display:block;height:100%;border-radius:2px;background:var(--hc-fg);transition:width .5s var(--ease),background .3s}
 .hcBar i.warn{background:var(--orange)}

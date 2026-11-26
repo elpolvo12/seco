@@ -19,7 +19,7 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 - **Kacheln statt Diagramme:** Startseite mit Gespart-, Kategorie- und Kennzahlen-Kacheln; Statistik mit Kalender-Heatmap (Tag antippen), Wochentag-, Monats-, Kategorie- und Läden-Kacheln
 - **Gespart & Tagesgeld:** Tagesbudget minus Ausgaben für Heute / Woche / Monat; die Tagesgeld-Karte schlägt den Überweisungsbetrag vor und vermerkt Überweisungen (mit Rückgängig)
 - **Liste zum Aufklappen:** „Alle Ausgaben“ unten auf der Startseite; Kategorie-Kachel antippen filtert die Liste
-- **Startseite:** Karte im Kartenformat (1,586 : 1, graphit bzw. perlweiß, Farbe nur für Status) mit „heute noch“, Monatsbalken und drei Kennzahlen (Monat · Restzeit · Prognose grün/rot); darunter die Wochen-Kacheln (nur Überschreitungen rot); durchgehend leichte Schrift (SF Light)
+- **Startseite:** Karte im Kartenformat (1,586 : 1, graphit bzw. perlweiß) mit Hologramm-Folie, die beim Scrollen schimmert, und Seco-Siegel/Wortmarke (Farbe sonst nur für Status) mit „heute noch“, Monatsbalken und drei Kennzahlen (Monat · Restzeit · Prognose grün/rot); darunter die Wochen-Kacheln (nur Überschreitungen rot); durchgehend leichte Schrift (SF Light)
 - **Heute noch X €:** Tagesbudget aus Monatsbudget (sonst Ø der letzten Monate) und verbleibenden Tagen
 - **Prognose:** Monatsende-Schätzung auf der Startseite und als gestrichelte Linie im Verlaufs-Diagramm (Statistik), mit Vormonat zum Vergleich
 - **Favoriten:** häufigste Ausgaben als Tasten – ein Tipp speichert sofort (gedrückt halten blendet aus)
