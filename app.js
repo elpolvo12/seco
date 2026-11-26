@@ -617,5 +617,41 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
+/* ---------- Version & Update ---------- */
+const APP_VERSION = '1.14';
+$('versionText').textContent = APP_VERSION;
+let latestVersion = null;
+const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++){ if ((x[i]||0) !== (y[i]||0)) return (x[i]||0) > (y[i]||0); } return false; };
+async function checkUpdate(manual){
+  if (manual){ $('updateLabel').textContent = 'Suche …'; $('updateState').textContent = ''; }
+  try {
+    const r = await fetch('version.json?t=' + Date.now(), {cache: 'no-store'});
+    latestVersion = (await r.json()).version;
+  } catch { latestVersion = null; }
+  const has = latestVersion && newer(latestVersion, APP_VERSION);
+  $('updateLabel').textContent = has ? `Version ${latestVersion} installieren` : latestVersion ? 'Aktuell ✓' : 'Nach Update suchen';
+  $('updateState').textContent = has ? '›' : '';
+  $('updateCheck').classList.toggle('add', !!has);
+  if (has) toast(`Neue Version ${latestVersion} verfügbar`, 'Aktualisieren', applyUpdate);
+  else if (manual && !latestVersion) toast('Keine Verbindung – später nochmal versuchen');
+  return has;
+}
+async function applyUpdate(){
+  toast('Wird aktualisiert …');
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    await reg?.update();
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));     // alte Dateien weg, Daten bleiben
+  } catch {}
+  location.reload();
+}
+$('updateCheck').onclick = async () => {
+  if (latestVersion && newer(latestVersion, APP_VERSION)) return applyUpdate();
+  checkUpdate(true);
+};
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+checkUpdate(false);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(false); });
 render();

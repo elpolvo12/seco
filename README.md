@@ -22,3 +22,6 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 - **Einstellungen:** Monatsbudget mit Warnung bei 80 %/100 %, eigene Kategorien (Name, Emoji, Farbe), JSON-Backup & Wiederherstellung, CSV-Export
 - **Ort:** Wenn aktiviert und du nicht zuhause bist (> 300 m), wird der Ort (Geschäft/Straße, Stadt) automatisch in die Notiz übernommen (Ortssuche über OpenStreetMap). An bekannten Orten werden Notiz und Kategorie vom letzten Mal sofort übernommen und passende Beträge vorgeschlagen
 - Hell-/Dunkelmodus, offline nutzbar, Daten bleiben lokal auf dem Gerät
+
+## Neue Version veröffentlichen
+Versionsnummer an drei Stellen erhöhen: `APP_VERSION` in `app.js`, `VERSION` in `sw.js` und `version.json`. Die App zeigt dann beim nächsten Öffnen „Neue Version verfügbar – Aktualisieren“.
