@@ -75,6 +75,19 @@ function niceName(t){
   return t.toLowerCase().replace(/(^|[\s\-&])(\p{L})/gu, (m, p, c) => p + c.toUpperCase());
 }
 
+/* Kategorien, wie Banking-Apps sie anzeigen -> App-Kategorie */
+const BANK_CATS = [
+  [/gastronomie|restaurant|essen\s*(&|und)\s*trinken|lieferdienst|caf[eé]s?\b|bars?\b/i, 'out'],
+  [/lebensmittel|supermarkt|drogerie\s*&\s*lebensmittel/i, 'food'],
+  [/mobilit[aä]t|verkehr|tanken|tankstelle|[öo]pnv|auto\b|transport|taxi|reisen?\b/i, 'transport'],
+  [/gesundheit|apotheke|medizin|drogerie|k[öo]rperpflege/i, 'health'],
+  [/wohnen|miete|haushalt|energie|nebenkosten|versicherung|internet|telefon|mobilfunk/i, 'home'],
+  [/streaming|unterhaltung|freizeit|kultur|sport|hobby|urlaub|abo(nnement)?s?\b/i, 'fun'],
+  [/shopping|kleidung|mode\b|elektronik|online.?shopping|einkaufen/i, 'shop'],
+  [/dienstleistung(en)?|sonstiges?|geb[uü]hren|bargeld|bildung/i, 'other'],
+];
+const BANK_CAT_LINE = new RegExp('^(' + BANK_CATS.map(([re]) => re.source).join('|') + ')$', 'i');
+
 /* Banking-Screenshot: Liste von Umsätzen mit Datumsüberschriften */
 const BankParser = (() => {
   const MONTHS = {jan:1, feb:2, mär:3, mae:3, mar:3, apr:4, mai:5, jun:6, jul:7, aug:8, sep:9, okt:10, oct:10, nov:11, dez:12, dec:12};
@@ -103,7 +116,10 @@ const BankParser = (() => {
   }
   const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
+  const PREFIX = /^\s*(crv|paypal|pp\.?\d*|sumup|sq|zettle|izettle|ztl|stripe|klarna|vrp|lsp|sp|tst|google|apple\.com\/bill|amzn\s*mktp|amazon\s*mktp)\s*\*\s*/i;
   function cleanName(s){
+    for (let k = 0; k < 4 && PREFIX.test(s); k++) s = s.replace(PREFIX, '');
+    s = s.replace(/(\p{L}{3,}.*?)\s+\p{L}\.?\s*$/u, '$1');   // abgeschnitten: "Shop L" -> "Shop"
     return niceName(s.replace(NOISE, ' ').replace(/[|_*#@<>»«©®"]/g, ' ').replace(/\s+/g, ' ').replace(/^[\s\-–.,:]+|[\s\-–.,:]+$/g, '').trim());
   }
   const isNameLike = s => (s.match(/\p{L}/gu) || []).length >= 3;
@@ -126,6 +142,11 @@ const BankParser = (() => {
       if (!m){
         if (d){ closeBlock(); curDate = d; dateHeaders++; pendingName = ''; continue; }
         const n = cleanName(line);
+        if (BANK_CAT_LINE.test(n)){
+          const last = raw[raw.length - 1];
+          if (last && !last.bankCat) last.bankCat = n;
+          continue;
+        }
         if (isNameLike(n)){ pendingName = n; block.names.push(n); }
         continue;
       }
@@ -146,7 +167,7 @@ const BankParser = (() => {
       .filter(r => minus ? r.sign === '-' : true)              // gibt es Minus-Beträge, nur diese
       .filter(r => r.amount > 0 && r.amount <= MAX_AMOUNT)     // > 1000 € ignorieren
       .filter(r => r.name)
-      .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today)}))
+      .map(r => ({name: r.name, amount: Math.round(r.amount), date: r.date || iso(today), bankCat: r.bankCat || ''}))
       .filter(r => r.amount > 0);
     const signed = raw.filter(r => r.sign).length;
     const looksLikeBank = raw.length >= 2 && (signed >= 2 || dateHeaders >= 1 || raw.filter(r => r.hasCurrency).length >= 2);
@@ -165,11 +186,20 @@ const CAT_HINTS = [
   [/ikea|\bobi\b|bauhaus|hornbach|toom|miete|strom|stadtwerke|telekom|vodafone|o2\b/i, 'home'],
   [/\bdm\b|rossmann|müller|mueller|h&m|zara|primark|mediamarkt|saturn|amazon|tk ?maxx|c&a|deichmann|zalando|otto\b/i, 'shop'],
 ];
-function guessCat(storeName){
-  if (!storeName) return null;
+function bankCatToApp(bankCat){
+  if (!bankCat) return null;
+  const own = state.cats.find(c => c.name.toLowerCase() === bankCat.toLowerCase());   // eigene Kategorie gleichen Namens
+  if (own) return own.id;
+  const hit = BANK_CATS.find(([re]) => re.test(bankCat));
+  return hit && state.cats.some(c => c.id === hit[1]) ? hit[1] : null;
+}
+function guessCat(storeName, bankCat){
+  if (!storeName) return bankCatToApp(bankCat);
   const s = storeName.toLowerCase();
   const prev = state.items.slice().reverse().find(i => i.note && (i.note.toLowerCase().includes(s) || s.includes(i.note.toLowerCase())));
   if (prev && state.cats.some(c => c.id === prev.cat)) return prev.cat;
+  const fromBank = bankCatToApp(bankCat);
+  if (fromBank) return fromBank;
   const hit = CAT_HINTS.find(([re]) => re.test(storeName));
   return hit && state.cats.some(c => c.id === hit[1]) ? hit[1] : null;
 }
@@ -286,7 +316,7 @@ function isDuplicate(r){
 function openImport(entries){
   importRows = entries.map(e => {
     const dup = isDuplicate(e);
-    return {...e, cat: guessCat(e.name) || selCat || state.cats[0].id, on: !dup, dup};
+    return {...e, cat: guessCat(e.name, e.bankCat) || (state.cats.find(c => c.id === 'other') || state.cats[0]).id, on: !dup, dup};
   });
   renderImport();
   openSheet('importSheet');
