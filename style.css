@@ -20,6 +20,7 @@
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#1b8a3f; --neg:#d63a30;
   --tab1:#0b8fc0; --tab2:#7a4be0; --tab3:#d4338a;
+  --link-grad:linear-gradient(100deg,#0b8fc0 0%,#7a4be0 55%,#d4338a 100%);
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
@@ -42,6 +43,7 @@
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --tab1:#64d2ff; --tab2:#bf9bff; --tab3:#ff8fc8;
+  --link-grad:linear-gradient(100deg,#79e2ff 0%,#b79bff 55%,#ff97cf 100%);
   --scrim:rgba(0,0,0,.55);
 }
 @media (prefers-color-scheme:dark){:root[data-theme="system"]{
@@ -55,6 +57,7 @@
   --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.86); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --tab1:#64d2ff; --tab2:#bf9bff; --tab3:#ff8fc8;
+  --link-grad:linear-gradient(100deg,#79e2ff 0%,#b79bff 55%,#ff97cf 100%);
   --scrim:rgba(0,0,0,.55);
 }}
 
@@ -430,3 +433,8 @@ b,strong{font-weight:500}
 /* Karte: drei Blöcke gleichmäßig verteilt (unabhängig von der Schrift) */
 .hcMain{margin-top:0}
 .hcSub{margin-top:6px;line-height:16px}
+
+/* Textlinks im Seco-Verlauf */
+.linkbtn,.scBtn,.cell.add,.rawLink,.hintBtn{color:transparent;background-image:var(--link-grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.heroCard .linkbtn{background-image:none;-webkit-text-fill-color:#fff;color:#fff}
+.toast button{color:var(--tab1)}

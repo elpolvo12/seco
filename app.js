@@ -863,7 +863,7 @@ $('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 darkMQ.addEventListener('change', () => { applyTheme(); render(); });
 applyTheme();
 /* ---------- Version & Update ---------- */
-const APP_VERSION = '1.54';
+const APP_VERSION = '1.55';
 $('versionText').textContent = APP_VERSION;
 let latestVersion = null;
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number);
