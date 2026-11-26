@@ -113,9 +113,12 @@ svg.ci{fill:currentColor;stroke:none}
   -webkit-mask-image:repeating-linear-gradient(135deg,#000 0 1px,transparent 1px 6px);mask-image:repeating-linear-gradient(135deg,#000 0 1px,transparent 1px 6px)}
 .heroCard > *{position:relative;z-index:1}
 .hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
-.brand{display:inline-flex;align-items:center;gap:6px;color:var(--hc-fg)}
-.brand .seal{width:22px;height:22px;flex:none}
-.brand b{font-family:var(--font-num);font-size:14px;font-weight:300;letter-spacing:.16em;text-transform:lowercase}
+.brand{display:inline-flex;align-items:center;color:var(--hc-fg)}
+.brand b{font-family:var(--font-num);font-size:24px;line-height:1;font-weight:700;letter-spacing:.005em;text-transform:lowercase;white-space:nowrap}
+/* o als holografischer Ring: derselbe Seco-Verlauf wie die Schraffur */
+.ringO{display:inline-block;width:.57em;height:.57em;border-radius:50%;margin-left:.025em;
+  background-image:linear-gradient(135deg,#79e2ff,#b79bff 30%,#ff97cf 55%,#ffd29a 78%,#9dffd2);background-size:220% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1.4%) 0;
+  -webkit-mask:radial-gradient(circle closest-side,transparent 54%,#000 56%);mask:radial-gradient(circle closest-side,transparent 54%,#000 56%)}
 .hcNum{font-family:var(--font-num);font-size:64px;line-height:66px;font-weight:200;letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hcSub{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:400;color:var(--hc-fg2);margin-top:1px}
 .hcBar{height:3px;border-radius:2px;background:var(--hc-line);margin:0 0 11px;overflow:hidden}
