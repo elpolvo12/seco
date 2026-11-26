@@ -78,7 +78,7 @@ function weekTilesHTML(now = new Date()){
   return Array.from({length: 7}, (_, i) => {
     const d = addDays(monday, i), ds = iso(d), e = totals.get(ds), amt = e ? e.sum : 0, future = ds > todayStr;
     const daily = base ? base.target / daysIn(d.getFullYear(), d.getMonth() + 1) : null;
-    const cls = future ? 'fut' : (!base || d < start) ? '' : amt > daily ? 'hi' : amt > 0 ? 'ok' : '';
+    const cls = future ? 'fut' : (!base || d < start) ? '' : amt > daily ? 'hi' : amt > daily * 0.8 ? 'warn' : amt > 0 ? 'ok' : '';
     return `<div class="${cls}${ds === todayStr ? ' today' : ''}"><small>${WD[i]}</small><b>${future ? '–' : Math.round(amt)}</b></div>`;
   }).join('');
 }
