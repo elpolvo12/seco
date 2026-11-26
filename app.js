@@ -382,12 +382,12 @@ async function shareFile(name, type, content){
   const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
-$('backupExport').onclick = () => shareFile(`ausgaben-backup-${iso(new Date())}.json`, 'application/json', JSON.stringify({app:'ausgaben', version:2, ...state}, null, 1));
+$('backupExport').onclick = () => shareFile(`seco-backup-${iso(new Date())}.json`, 'application/json', JSON.stringify({app:'seco', version:2, ...state}, null, 1));
 $('csvExport').onclick = () => {
   const q = s => `"${String(s).replace(/"/g,'""')}"`;
   const rows = [['Datum','Kategorie','Betrag','Notiz'], ...state.items.slice().sort((a,b) => a.date.localeCompare(b.date))
     .map(i => [i.date, cat(i.cat).name, i.amount.toFixed(2).replace('.',','), i.note])];
-  shareFile(`ausgaben-${iso(new Date())}.csv`, 'text/csv', '﻿' + rows.map(r => r.map(q).join(';')).join('\n'));
+  shareFile(`seco-${iso(new Date())}.csv`, 'text/csv', '﻿' + rows.map(r => r.map(q).join(';')).join('\n'));
 };
 $('backupImport').onclick = () => $('importFile').click();
 $('importFile').onchange = async e => {

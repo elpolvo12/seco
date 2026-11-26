@@ -1,4 +1,4 @@
-# Ausgaben – Ausgaben-Tracker für iPhone
+# Seco – Ausgaben-Tracker für iPhone
 
 Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben lokal auf dem Gerät.
 
