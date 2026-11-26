@@ -412,3 +412,9 @@ b,strong{font-weight:500}
 
 .tile b.pos,.saveCard b.pos{color:var(--pos)}
 .tile b.neg,.saveCard b.neg{color:var(--neg)}
+
+/* Karte: Beschriftungen in Großbuchstaben (Zahlen bleiben) */
+.hcTop #hcDate,.hcSub,.hcCols small,.hcCols em{text-transform:uppercase;letter-spacing:.06em}
+.hcTop #hcDate{font-size:12px}
+.hcSub{font-size:12px}
+.hcCols small,.hcCols em{font-size:10.5px;letter-spacing:.03em}
