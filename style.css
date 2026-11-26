@@ -17,7 +17,7 @@
   --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500; --yellow:#ffcc00; --heat:#ff2d78;
   /* Glas (Tab-Leiste, Titelleiste, Toast) */
   --glass:rgba(255,255,255,.72); --glass-edge:rgba(255,255,255,.6); --glass-shadow:0 8px 28px rgba(0,0,0,.14);
-  --hc-bg:transparent; --hc-fg:#131316; --hc-fg2:rgba(19,19,22,.62); --hc-line:rgba(19,19,22,.20); --hc-border:rgba(255,255,255,.55); --hc-shadow:0 12px 28px rgba(80,70,140,.22); --hc-ok:#13783a; --hc-bad:#c4302a; --hc-warn:#b45f00; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#1b8a3f; --neg:#d63a30;
   --scrim:rgba(0,0,0,.3);
   /* Typografie */
@@ -38,7 +38,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:transparent; --hc-fg:#131316; --hc-fg2:rgba(19,19,22,.62); --hc-line:rgba(19,19,22,.20); --hc-border:rgba(255,255,255,.55); --hc-shadow:0 12px 28px rgba(80,70,140,.22); --hc-ok:#13783a; --hc-bad:#c4302a; --hc-warn:#b45f00; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }
@@ -50,7 +50,7 @@
   --fill:rgba(120,120,128,.36); --fill2:rgba(120,120,128,.32); --fill3:rgba(120,120,128,.24);
   --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a; --yellow:#ffd60a;
   --glass:rgba(44,44,46,.62); --glass-edge:rgba(255,255,255,.12); --glass-shadow:0 8px 28px rgba(0,0,0,.5);
-  --hc-bg:transparent; --hc-fg:#131316; --hc-fg2:rgba(19,19,22,.62); --hc-line:rgba(19,19,22,.20); --hc-border:rgba(255,255,255,.55); --hc-shadow:0 12px 28px rgba(80,70,140,.22); --hc-ok:#13783a; --hc-bad:#c4302a; --hc-warn:#b45f00; --hc-sheen:transparent;
+  --hc-bg:transparent; --hc-fg:#ffffff; --hc-fg2:rgba(255,255,255,.70); --hc-line:rgba(255,255,255,.24); --hc-border:rgba(255,255,255,.20); --hc-shadow:0 14px 32px rgba(10,8,30,.45); --hc-ok:#62e08e; --hc-bad:#ff8a80; --hc-warn:#ffbe55; --hc-sheen:transparent;
   --pos:#34d058; --neg:#ff6b61;
   --scrim:rgba(0,0,0,.55);
 }}
@@ -101,12 +101,12 @@ svg.ci{fill:currentColor;stroke:none}
 /* Karte: der Seco-Hologramm-Verlauf als Fläche, schraffiert; Logo klein oben rechts */
 @property --hp{syntax:'<number>';inherits:true;initial-value:0}
 .heroCard{position:relative;overflow:hidden;aspect-ratio:1.586;display:flex;flex-direction:column;justify-content:space-between;border-radius:22px;padding:18px 20px 16px;margin-bottom:14px;color:var(--hc-fg);border:.5px solid var(--hc-border);box-shadow:var(--hc-shadow);
-  background-color:#c7b8ff;
-  background-image:linear-gradient(105deg,#8fe6ff 0%,#bda4ff 22%,#ff9fd2 44%,#ffd6a4 62%,#a6ffd8 82%,#8fe6ff 100%);
+  background-color:#3b2f8f;
+  background-image:linear-gradient(105deg,#1a5f7c 0%,#3a2f90 22%,#8a2a6c 44%,#8c5a2e 62%,#1c6f5a 82%,#1a5f7c 100%);
   background-size:230% 100%;background-position:calc((var(--hp) + var(--hs,0)) * 1%) 0;animation:holoFlow 12s ease-in-out infinite alternate}
 @keyframes holoFlow{from{--hp:0}to{--hp:55}}
 /* Schraffur: feine Diagonallinien */
-.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(19,19,22,.13) 0 1px,transparent 1px 5px)}
+.heroCard::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,rgba(255,255,255,.11) 0 1px,transparent 1px 5px)}
 .heroCard > *{position:relative;z-index:1}
 .hcTop{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:400;color:var(--hc-fg2)}
 .brand{display:inline-flex;align-items:center;gap:6px;color:var(--hc-fg)}
