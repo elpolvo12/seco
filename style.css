@@ -72,9 +72,12 @@ svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-lin
 .swipe{position:relative;overflow:hidden}
 .swipe + .swipe .row{border-top:0}
 .swipe:not(:last-child)::after{content:"";position:absolute;left:62px;right:0;bottom:0;border-bottom:.5px solid var(--line);pointer-events:none}
-.swipeDel{position:absolute;inset:0 0 0 auto;width:88px;background:var(--red);color:#fff;border:0;font-weight:500}
+.swipeDel{position:absolute;inset:0 0 0 auto;width:88px;background:var(--red);color:#fff;border:0;font-weight:500;display:flex;align-items:center;justify-content:center;transition:width .3s var(--ease)}
+.swipe.dragging .swipeDel{transition:none}
+.swipe.dragging .row{transition:none}
+.swipe.full .swipeDel{justify-content:flex-start;padding-left:22px}
+.swipe.collapse{transition:height .25s var(--ease)}
 .row{position:relative;display:flex;align-items:center;gap:12px;padding:11px 16px;background:var(--card);touch-action:pan-y;transition:transform .3s var(--ease);user-select:none;-webkit-user-select:none}
-.row.dragging{transition:none}
 .row:active{background:var(--fill)}
 .ico{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:18px;flex:none;background:color-mix(in srgb,var(--c) 22%,transparent)}
 .ico.big{width:72px;height:72px;font-size:38px}

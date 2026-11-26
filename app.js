@@ -151,37 +151,65 @@ function groupByCat(list){
 $('search').oninput = renderHome;
 $('setBudgetHint').onclick = () => { showTab('settings'); setTimeout(() => $('budgetInput').focus(), 50); };
 
-/* Wischen zum Löschen */
+/* Wischen zum Löschen: kurz wischen = Taste zeigen, weit wischen (> 50 %) = sofort löschen */
 let drag = null, openRow = null;
-const closeOpen = () => { if (openRow){ openRow.style.transform = ''; openRow = null; } };
+const delBtn = row => row.parentElement.querySelector('.swipeDel');
+const setX = (row, x) => {
+  row.style.transform = x ? `translateX(${x}px)` : '';
+  delBtn(row).style.width = Math.max(88, -x) + 'px';
+};
+const closeOpen = () => { if (openRow){ setX(openRow, 0); openRow = null; } };
 $('list').addEventListener('pointerdown', e => {
   const row = e.target.closest('.row'); if (!row) return;
   if (openRow && openRow !== row) closeOpen();
-  drag = {row, x:e.clientX, y:e.clientY, dx:0, base: row === openRow ? -88 : 0, moved:false, locked:null};
+  drag = {row, id: e.pointerId, x:e.clientX, y:e.clientY, dx:0, base: row === openRow ? -88 : 0, moved:false, locked:null, full:false};
 });
 $('list').addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag || e.pointerId !== drag.id) return;
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-  if (drag.locked === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) drag.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+  if (drag.locked === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)){
+    drag.locked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    if (drag.locked === 'x') try { drag.row.setPointerCapture(e.pointerId); } catch {}
+  }
   if (drag.locked !== 'x') return;
   drag.moved = true; drag.dx = dx;
-  drag.row.classList.add('dragging');
-  drag.row.style.transform = `translateX(${Math.max(-110, Math.min(0, drag.base + dx))}px)`;
+  const sw = drag.row.parentElement, w = sw.offsetWidth;
+  sw.classList.add('dragging');
+  const x = Math.min(0, drag.base + dx);
+  setX(drag.row, x);
+  const full = -x > w * 0.5;
+  if (full !== drag.full){ drag.full = full; sw.classList.toggle('full', full); }
 });
 const endDrag = () => {
   if (!drag) return;
-  const {row, moved, base, dx} = drag; drag = null;
-  row.classList.remove('dragging');
+  const {row, moved, base, dx, full} = drag; drag = null;
+  const sw = row.parentElement;
+  sw.classList.remove('dragging');
   if (!moved){
     if (openRow === row){ closeOpen(); return; }
-    openExpense(state.items.find(i => i.id == row.parentElement.dataset.id));
+    openExpense(state.items.find(i => i.id == sw.dataset.id));
     return;
   }
-  if (base + dx < -44){ row.style.transform = 'translateX(-88px)'; openRow = row; }
-  else { row.style.transform = ''; if (openRow === row) openRow = null; }
+  if (full){                                   // ganz rausschieben, Zeile zuklappen, löschen
+    const w = sw.offsetWidth;
+    setX(row, -w);
+    sw.style.height = sw.offsetHeight + 'px';
+    requestAnimationFrame(() => { sw.classList.add('collapse'); sw.style.height = '0px'; });
+    openRow = null;
+    setTimeout(() => removeItem(+sw.dataset.id), 280);
+    return;
+  }
+  sw.classList.remove('full');
+  if (base + dx < -44){ setX(row, -88); openRow = row; }
+  else { setX(row, 0); if (openRow === row) openRow = null; }
 };
 $('list').addEventListener('pointerup', endDrag);
-$('list').addEventListener('pointercancel', () => { if (drag){ drag.row.classList.remove('dragging'); drag.row.style.transform = drag.base ? 'translateX(-88px)' : ''; drag = null; } });
+$('list').addEventListener('pointercancel', () => {
+  if (!drag) return;
+  const {row, base} = drag; drag = null;
+  row.parentElement.classList.remove('dragging', 'full');
+  setX(row, base);
+});
 $('list').addEventListener('click', e => { const d = e.target.closest('[data-del]'); if (d) removeItem(+d.dataset.del); });
 document.addEventListener('pointerdown', e => { if (openRow && !e.target.closest('.swipe')) closeOpen(); });
 
