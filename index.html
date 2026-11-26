@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,39 +15,153 @@
 <title>Ausgaben</title>
 </head>
 <body>
-<header>
-  <div class="monthnav">
-    <button id="prev" aria-label="Voriger Monat">‹</button>
-    <h1 id="month"></h1>
-    <button id="next" aria-label="Nächster Monat">›</button>
+
+<!-- ÜBERSICHT -->
+<section class="view active" id="view-home">
+  <div class="topbar">
+    <button class="navbtn" data-month="-1" aria-label="Voriger Monat">‹</button>
+    <h1 class="monthTitle"></h1>
+    <button class="navbtn" data-month="1" aria-label="Nächster Monat">›</button>
   </div>
-  <div class="total" id="total"></div>
-  <div class="bar" id="bar"></div>
-  <div class="legend" id="legend"></div>
-</header>
 
-<main id="list"></main>
+  <div class="card hero">
+    <div class="sublabel">Ausgegeben</div>
+    <div class="total" id="total"></div>
+    <div id="budgetBox" hidden>
+      <div class="progress"><i id="budgetFill"></i></div>
+      <div class="budgetText" id="budgetText"></div>
+    </div>
+    <button class="linkbtn" id="setBudgetHint" hidden>Monatsbudget festlegen</button>
+  </div>
 
-<div class="actions">
-  <button id="export" class="ghost">CSV exportieren</button>
+  <div class="card" id="catCard" hidden>
+    <div class="stack" id="bar"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Suchen (alle Monate)" autocomplete="off" enterkeyhint="search">
+  </div>
+
+  <div id="list"></div>
+</section>
+
+<!-- STATISTIK -->
+<section class="view" id="view-stats">
+  <div class="topbar">
+    <button class="navbtn" data-month="-1" aria-label="Voriger Monat">‹</button>
+    <h1 class="monthTitle"></h1>
+    <button class="navbtn" data-month="1" aria-label="Nächster Monat">›</button>
+  </div>
+
+  <h3 class="sectionTitle">Letzte 6 Monate</h3>
+  <div class="card chartCard">
+    <div class="tip" id="barTip"></div>
+    <svg id="monthChart" class="chart" role="img" aria-label="Ausgaben der letzten sechs Monate"></svg>
+  </div>
+
+  <h3 class="sectionTitle">Nach Kategorie</h3>
+  <div class="card" id="donutCard">
+    <div class="donutWrap">
+      <svg id="donut" viewBox="0 0 120 120" role="img" aria-label="Ausgaben nach Kategorie"></svg>
+      <div class="donutCenter"><b id="donutTotal"></b><small id="donutLabel">Gesamt</small></div>
+    </div>
+    <div id="catTable" class="table"></div>
+  </div>
+
+  <h3 class="sectionTitle">Kennzahlen</h3>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<!-- EINSTELLUNGEN -->
+<section class="view" id="view-settings">
+  <div class="topbar"><h1 class="large">Einstellungen</h1></div>
+
+  <h3 class="sectionTitle">Budget</h3>
+  <div class="card group">
+    <label class="cell">
+      <span>Monatsbudget</span>
+      <input id="budgetInput" type="text" inputmode="decimal" placeholder="Kein Budget" autocomplete="off">
+    </label>
+  </div>
+  <p class="footnote">Du wirst bei 80 % und beim Überschreiten gewarnt.</p>
+
+  <h3 class="sectionTitle">Kategorien</h3>
+  <div class="card group" id="catList"></div>
+
+  <h3 class="sectionTitle">Daten</h3>
+  <div class="card group">
+    <button class="cell action" id="backupExport">Backup exportieren <span class="chev">›</span></button>
+    <button class="cell action" id="backupImport">Backup wiederherstellen <span class="chev">›</span></button>
+    <button class="cell action" id="csvExport">Als CSV exportieren <span class="chev">›</span></button>
+    <button class="cell action danger" id="wipe">Alle Daten löschen</button>
+  </div>
+  <p class="footnote">Alle Daten sind nur auf diesem Gerät gespeichert. Exportiere regelmäßig ein Backup, z. B. in die Dateien-App oder iCloud Drive.</p>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
+</section>
+
+<!-- TAB-LEISTE -->
+<nav class="tabbar">
+  <button class="tab active" data-view="home">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Übersicht</span>
+  </button>
+  <button class="addbtn" id="add" aria-label="Ausgabe hinzufügen">
+    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+  <button class="tab" data-view="stats">
+    <svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span>Statistik</span>
+  </button>
+  <button class="tab" data-view="settings">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>Einstellungen</span>
+  </button>
+</nav>
+
+<!-- SHEET: AUSGABE -->
+<div class="sheetWrap" id="expenseSheet">
+  <div class="backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheetHead">
+      <button class="linkbtn" data-close>Abbrechen</button>
+      <b id="expTitle">Neue Ausgabe</b>
+      <button class="linkbtn strong" id="expSave">Sichern</button>
+    </div>
+    <div class="amountDisplay" id="amountDisplay"></div>
+    <div class="chips" id="chips"></div>
+    <div class="fields">
+      <input id="note" type="text" placeholder="Notiz" autocomplete="off" enterkeyhint="done">
+      <input id="date" type="date">
+    </div>
+    <div class="keypad" id="keypad">
+      <button>1</button><button>2</button><button>3</button>
+      <button>4</button><button>5</button><button>6</button>
+      <button>7</button><button>8</button><button>9</button>
+      <button>,</button><button>0</button><button data-k="del" aria-label="Löschen">⌫</button>
+    </div>
+    <button class="deleteBtn" id="expDelete" hidden>Ausgabe löschen</button>
+  </div>
 </div>
 
-<button id="fab" aria-label="Ausgabe hinzufügen">+</button>
-
-<dialog id="sheet">
-  <form method="dialog" id="form">
-    <h2 id="sheetTitle">Neue Ausgabe</h2>
-    <input id="amount" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required>
-    <div class="cats" id="cats"></div>
-    <input id="note" type="text" placeholder="Notiz (optional)" autocomplete="off">
-    <input id="date" type="date" required>
-    <div class="row">
-      <button type="button" id="cancel" class="ghost">Abbrechen</button>
-      <button type="button" id="del" class="danger" hidden>Löschen</button>
-      <button type="submit" class="primary">Speichern</button>
+<!-- SHEET: KATEGORIE -->
+<div class="sheetWrap" id="catSheet">
+  <div class="backdrop" data-close></div>
+  <div class="sheet">
+    <div class="sheetHead">
+      <button class="linkbtn" data-close>Abbrechen</button>
+      <b id="catTitle">Kategorie</b>
+      <button class="linkbtn strong" id="catSave">Sichern</button>
     </div>
-  </form>
-</dialog>
+    <div class="catPreview"><span class="ico big" id="catPrevIco"></span></div>
+    <div class="fields">
+      <input id="catName" type="text" placeholder="Name" autocomplete="off" maxlength="24">
+      <input id="catEmoji" type="text" placeholder="Emoji" autocomplete="off" maxlength="8">
+    </div>
+    <div class="swatches" id="swatches"></div>
+    <button class="deleteBtn" id="catDelete" hidden>Kategorie löschen</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText"></span><button id="toastAction"></button></div>
 
 <script src="app.js"></script>
 </body>

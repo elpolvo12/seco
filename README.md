@@ -10,4 +10,9 @@ Offline-fähige Web-App (PWA) zum Protokollieren von Geldausgaben. Daten bleiben
 ## Lokal testen
 `python3 -m http.server 8000` und http://localhost:8000 öffnen.
 
-Funktionen: Ausgaben mit Betrag/Kategorie/Notiz/Datum, Monatsübersicht mit Kategorie-Verteilung, Bearbeiten/Löschen, CSV-Export (iOS-Teilen-Menü).
+## Funktionen
+- **Übersicht:** Monatssumme, Budget-Fortschritt (inkl. Tagesbudget), Verteilung nach Kategorien, Suche über alle Monate
+- **Erfassen:** eigener Ziffernblock, Kategorie, Notiz, Datum; Antippen zum Bearbeiten, nach links wischen zum Löschen (mit Rückgängig)
+- **Statistik:** letzte 6 Monate mit Budgetlinie, Ringdiagramm nach Kategorie, Kennzahlen (Ø/Tag, größte Ausgabe, Vergleich zum Vormonat)
+- **Einstellungen:** Monatsbudget mit Warnung bei 80 %/100 %, eigene Kategorien (Name, Emoji, Farbe), JSON-Backup & Wiederherstellung, CSV-Export
+- Hell-/Dunkelmodus, offline nutzbar, Daten bleiben lokal auf dem Gerät
