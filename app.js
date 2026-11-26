@@ -6,7 +6,8 @@ const PALETTE = {
   dark:  ['#338ced','#e76624','#00a888','#d28e05','#e24d8b','#0aac23','#9887ef','#eb6263','#98989f'],
 };
 const darkMQ = matchMedia('(prefers-color-scheme: dark)');
-const color = slot => PALETTE[darkMQ.matches ? 'dark' : 'light'][slot] ?? PALETTE.light[8];
+const isDark = () => (state.theme || 'dark') === 'dark' || (state.theme === 'system' && darkMQ.matches);
+const color = slot => PALETTE[isDark() ? 'dark' : 'light'][slot] ?? PALETTE.light[8];
 
 const DEFAULT_CATS = [
   {id:'food',     name:'Lebensmittel', ico:'🛒', c:5},
@@ -413,13 +414,13 @@ $('importFile').onchange = async e => {
     if (!Array.isArray(items) || items.some(i => typeof i.amount !== 'number' || !/^\d{4}-\d\d-\d\d$/.test(i.date))) throw 0;
     if (!confirm(`Backup mit ${items.length} Ausgaben wiederherstellen? Aktuelle Daten werden ersetzt.`)) return;
     state = {items, cats: Array.isArray(d.cats) && d.cats.length ? d.cats : structuredClone(DEFAULT_CATS), budget: Math.round(+d.budget || 0), loc: !!d.loc, home: d.home || null, places: Array.isArray(d.places) ? d.places : []};
-    roundAll(state); state.wholeEuros = true; save(); render(); toast('Backup wiederhergestellt');
+    roundAll(state); state.wholeEuros = true; state.theme = d.theme || 'dark'; save(); applyTheme(); render(); toast('Backup wiederhergestellt');
   } catch { alert('Die Datei ist kein gültiges Backup.'); }
 };
 $('wipe').onclick = () => {
   if (!confirm('Wirklich alle Ausgaben, Kategorien und das Budget löschen?')) return;
   const old = state;
-  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: [], wholeEuros: true};
+  state = {items: [], cats: structuredClone(DEFAULT_CATS), budget: 0, loc: false, home: null, places: [], wholeEuros: true, theme: old.theme};
   save(); render();
   toast('Alle Daten gelöscht', 'Rückgängig', () => { state = old; save(); render(); });
 };
@@ -572,7 +573,14 @@ function toast(text, actionLabel = '', action = null){
 }
 
 /* ---------- Start ---------- */
-darkMQ.addEventListener('change', render);
+function applyTheme(){
+  document.documentElement.dataset.theme = state.theme || 'dark';
+  $('themeColor').content = isDark() ? '#000000' : '#f2f2f7';
+  $$('#themeSeg button').forEach(b => b.classList.toggle('on', b.dataset.t === (state.theme || 'dark')));
+}
+$('themeSeg').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.theme = b.dataset.t; save(); applyTheme(); render(); };
+darkMQ.addEventListener('change', () => { applyTheme(); render(); });
+applyTheme();
 addEventListener('resize', () => { if (tab === 'stats') renderMonthChart(); });
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 render();

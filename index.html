@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Seco">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#000000" id="themeColor">
+<script>try{var t=(JSON.parse(localStorage.getItem("ausgaben.v2"))||{}).theme;if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="stylesheet" href="style.css">
@@ -77,6 +77,16 @@
 <!-- EINSTELLUNGEN -->
 <section class="view" id="view-settings">
   <div class="topbar"><h1 class="large">Einstellungen</h1></div>
+
+  <h3 class="sectionTitle">Darstellung</h3>
+  <div class="card group">
+    <div class="cell">
+      <span>Ansicht</span>
+      <div class="segmented" id="themeSeg">
+        <button data-t="dark">Dunkel</button><button data-t="light">Hell</button><button data-t="system">System</button>
+      </div>
+    </div>
+  </div>
 
   <h3 class="sectionTitle">Budget</h3>
   <div class="card group">
